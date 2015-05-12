@@ -1,7 +1,7 @@
 - clean: ['~']
 
 - link:
-    #~/.dotfiles: ''
+    ~/.dotfiles: ''
     ~/.gitconfig: 'files/gitconfig'
     ~/.gitignore: 'files/gitignore'
     ~/.bash_profile: 'files/bash_profile'
