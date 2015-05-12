@@ -1,0 +1,73 @@
+if [ -f ~/.bash_keys ]; then
+    . ~/.bash_keys
+fi
+
+export EDITOR='vim'
+export TERM=screen-256color
+
+alias ls='ls --color=tty'
+alias l='ls -la'
+alias clip='xclip -sel clip'
+alias dir-here='nautilus .'
+
+alias reset-nul="sudo rm /dev/null && sudo mknod -m 0666 /dev/null c 1 3"
+alias my-pm-sleep-1="sudo sh /etc/acpi/sleep.sh force"
+alias my-pm-sleep-2="sudo pm-suspend"
+alias my-pm-sleep-3="dbus-send --print-reply --system --dest=org.freedesktop.UPower /org/freedesktop/UPower org.freedesktop.UPower.Suspend"
+alias bt-on="pactl load-module module-bluetooth-device profile=a2dp sink_name=bluediot9 address=10:03:20:E2:24:E3"
+alias mount-wildfire="sshfs -p 30022 flame@wildfire:/home/flame /mnt/sshfs-wildfire-home"
+alias umount-wildfire="sudo fusermount -u /mnt/sshfs-wildfire-home"
+alias umount-wildfire-force="sudo umount -fv /mnt/sshfs-wildfire-home"
+alias mount_dingoo="sudo mount -t vfat /dev/sdb /mnt/dingoo"
+alias umount_dingoo="sudo umount /dev/sdb"
+alias test-bandwith="wget --output-document=/dev/null http://speedtest.wdc01.softlayer.com/downloads/test500.zip"
+
+alias tail-log="tail -f log/development.log"
+
+function gitac () {
+  git add -u && git add . && git commit -am "$@";
+}
+
+function git-ri () {
+  git rebase -i HEAD~$1;
+}
+
+function git-clean () {
+  git clean -fd && git reset --hard && git status
+}
+
+function git-blame-all () {
+  git branch | while read branch; do git --no-pager blame $branch $1; done
+}
+
+function git-grep-all () {
+  git branch | while read branch; do git --no-pager grep $1 $branch $2; done
+}
+
+function git-log-my () {
+  for k in `git branch|perl -pe 's/^..//'`;do echo -e `git show --since="1 $1 ago" --author="$(git config user.name)" --pretty=format:"%Cgreen%ci %Cblue%cr%Creset" $k|head -n 1`\\t$k;done|sort -r|grep :
+}
+
+alias branch-names="perl -pe 's/^.*\t//'"
+
+function dg () {
+  grep -rl --exclude-dir tmp --exclude *.log "$@" *;
+}
+
+function dirfind () {
+  find . -iname  "$@";
+}
+
+function wpid () {
+  ps aux | grep "$@" | grep -v "grep" | grep "$USER\s*[[:digit:]]*"
+}
+
+function orlin () {
+  echo $@ > .app_branch
+  cp tmp/files/config/database.$@.yml config/database.yml
+  rm config/sphinx.yml
+}
+
+function batch-js2coffee () {
+  find "$@" -name "*.js" -print -exec sh -c "js2coffee '{}' > '{}.coffee' && rm '{}'" -- {} \;
+}

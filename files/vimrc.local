@@ -1,0 +1,118 @@
+execute pathogen#infect()
+filetype plugin indent on
+
+let mapleader = '\'
+set laststatus=2
+
+syntax enable
+set encoding=utf-8
+set ruler
+set number
+set nowrap
+set tabstop=2
+set shiftwidth=2
+set expandtab
+set softtabstop=2
+set autoread
+
+set hlsearch
+set incsearch
+set ignorecase
+set smartcase
+
+set title
+set scrolloff=3
+set sidescrolloff=5
+set showmatch
+set showcmd
+
+set noswapfile
+
+set t_Co=256
+
+" set background=dark
+set background=light
+
+" option name default optional
+let g:solarized_termcolors= 256
+let g:solarized_termtrans = 1
+let g:solarized_degrade = 0
+let g:solarized_bold = 1
+let g:solarized_underline = 1
+let g:solarized_italic = 1
+let g:solarized_contrast = "normal"
+let g:solarized_visibility= "normal"
+let g:solarized_hitrail = 1
+
+color desert
+colorscheme solarized
+
+set nobackup
+set nowritebackup
+
+" call togglebg#map("<F5>")
+
+" NERDTree
+map <Leader>n :NERDTreeToggle<CR>
+" map <F8> :NERDTreeToggle<CR>
+" map <F8> <plug>NERDTreeTabsToggle<CR>
+let NERDTreeWinPos='left'
+
+map <Leader><Leader> :ZoomWin<CR>
+
+" Navigate between windows
+nmap <C-h> <C-w>h
+nmap <C-j> <C-w>j
+nmap <C-k> <C-w>k
+nmap <C-l> <C-w>l
+
+" Taglist                                                       "
+map <F7> :TlistToggle<CR>
+" Split to the right side of the screen
+let g:Tlist_Use_Left_Window = 1
+" Set the window width
+let g:Tlist_WinWidth = 24
+" Sort by the order
+let g:Tlist_Sort_Type = "name"
+" Do not display the help info
+let g:Tlist_Compact_Format = 1
+" If you are the last, kill yourself
+let g:Tlist_Exit_OnlyWindow = 1
+" Do not close tags for other files
+let g:Tlist_File_Fold_Auto_Close = 1
+" Do not show folding tree
+let g:Tlist_Enable_Fold_Column = 0
+" Always display one file tags
+let g:Tlist_Show_One_File = 1
+
+nnoremap ; :
+nmap <silent> // :nohlsearch<CR>
+
+map ;y "+y
+map ;p "+p
+map ;P "+P
+map ;d "+d
+
+map ;Y ggVG"+Y
+
+nmap ;j :diffget LO<CR>
+nmap ;k :diffget BA<CR>
+nmap ;l :diffget RE<CR>
+
+map <Leader>+ :set background=light<CR>
+map <Leader>_ :set background=dark<CR>
+
+au BufRead,BufNewFile *.thor set filetype=ruby
+au BufRead,BufNewFile *.rabl setf ruby
+au BufRead,BufNewFile *.hamlc set ft=haml
+
+" let g:svndiff_autoupdate = 1
+" noremap <F3> :call Svndiff("prev")<CR>
+" noremap <F4> :call Svndiff("next")<CR>
+" noremap <F5> :call Svndiff("clear")<CR>
+" hi DiffAdd      ctermfg=0 ctermbg=2 guibg='green'
+" hi DiffDelete   ctermfg=0 ctermbg=1 guibg='red'
+" hi DiffChange   ctermfg=0 ctermbg=3 guibg='yellow'
+
+" let g:snipMate.scope_aliases['ruby'] = 'ruby,ruby-rails,myruby'
+let g:snippets_dir = "~/.vim/snippets"

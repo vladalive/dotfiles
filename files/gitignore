@@ -1,0 +1,15 @@
+.svn
+.bundle
+.rake_tasks~
+.rvmrc
+.DS_Store
+.sass-cache/
+node_modules
+npm-debug.log
+config/initializers/pry.rb
+NOTES.txt
+dump.rdb
+config/database.yml
+db/*.sqlite*
+log/*.log
+tmp/
