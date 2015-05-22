@@ -2,6 +2,7 @@ execute pathogen#infect()
 filetype plugin indent on
 
 let mapleader = '\'
+
 set laststatus=2
 
 syntax enable
@@ -15,6 +16,11 @@ set expandtab
 set softtabstop=2
 set autoread
 
+set autoindent
+set copyindent
+set shiftround
+set smarttab
+
 set hlsearch
 set incsearch
 set ignorecase
@@ -27,6 +33,13 @@ set showmatch
 set showcmd
 
 set noswapfile
+set nobackup
+set nowritebackup
+
+set history=1000
+set undolevels=1000
+set visualbell
+set noerrorbells
 
 set t_Co=256
 
@@ -46,9 +59,6 @@ let g:solarized_hitrail = 1
 
 color desert
 colorscheme solarized
-
-set nobackup
-set nowritebackup
 
 " call togglebg#map("<F5>")
 
@@ -99,20 +109,20 @@ nmap ;j :diffget LO<CR>
 nmap ;k :diffget BA<CR>
 nmap ;l :diffget RE<CR>
 
-map <Leader>+ :set background=light<CR>
-map <Leader>_ :set background=dark<CR>
+" Use Q for formatting the current paragraph (or selection)
+vmap Q gq
+nmap Q gqap
+
+nmap <Leader>+ :set background=light<CR>
+nmap <Leader>_ :set background=dark<CR>
 
 au BufRead,BufNewFile *.thor set filetype=ruby
 au BufRead,BufNewFile *.rabl setf ruby
 au BufRead,BufNewFile *.hamlc set ft=haml
 
-" let g:svndiff_autoupdate = 1
-" noremap <F3> :call Svndiff("prev")<CR>
-" noremap <F4> :call Svndiff("next")<CR>
-" noremap <F5> :call Svndiff("clear")<CR>
-" hi DiffAdd      ctermfg=0 ctermbg=2 guibg='green'
-" hi DiffDelete   ctermfg=0 ctermbg=1 guibg='red'
-" hi DiffChange   ctermfg=0 ctermbg=3 guibg='yellow'
-
 " let g:snipMate.scope_aliases['ruby'] = 'ruby,ruby-rails,myruby'
 let g:snippets_dir = "~/.vim/snippets"
+
+let g:EasyMotion_do_mapping = 0 " Disable default mappings
+let g:EasyMotion_smartcase = 1 " Turn on case insensitive feature
+nmap s <Plug>(easymotion-s2)
