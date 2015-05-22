@@ -9,7 +9,7 @@
     ~/.zshrc: 'files/zshrc'
     ~/.bashrc: 'files/bashrc'
     ~/.gemrc: 'files/gemrc'
-    ~/.vimrc.before: 'files/vimrc.local'
+    ~/.vimrc.after: 'files/vimrc.local'
     ~/.gvimrc.local: 'files/gvimrc.local'
     ~/.tmux.conf: 'files/tmux.conf'
 
