@@ -55,7 +55,6 @@ let g:solarized_underline = 1
 let g:solarized_italic = 1
 let g:solarized_contrast = "normal"
 let g:solarized_visibility= "normal"
-let g:solarized_hitrail = 1
 
 color desert
 colorscheme solarized
