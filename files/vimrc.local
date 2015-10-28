@@ -75,6 +75,16 @@ nmap <C-j> <C-w>j
 nmap <C-k> <C-w>k
 nmap <C-l> <C-w>l
 
+if executable('ag')
+  " let g:ackprg = 'ag --vimgrep'
+  let g:ackprg = 'ag --nogroup --nocolor --column'
+endif
+
+let g:ctrlp_custom_ignore = {
+  \ 'dir':  '\v[\/](\.git|doc|tmp|node_modules|bower_components)$',
+  \ 'file': '\v\.(exe|so|dll)$',
+  \ }
+
 " Taglist                                                       "
 map <F7> :TlistToggle<CR>
 " Split to the right side of the screen
@@ -125,3 +135,16 @@ let g:snippets_dir = "~/.vim/snippets"
 let g:EasyMotion_do_mapping = 0 " Disable default mappings
 let g:EasyMotion_smartcase = 1 " Turn on case insensitive feature
 nmap s <Plug>(easymotion-s2)
+
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+
+"let g:syntastic_coffee_checkers = ['coffeelint']
+
+nmap <Leader>s :SyntasticToggleMode<CR>

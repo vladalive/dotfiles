@@ -48,6 +48,7 @@
 
   g = grep --break --heading --line-number
   gn = grep --name-only
+	create-pull-request = !sh -c 'stash pull-request $0 $@'
 
 [core]
 	excludesfile = ~/.gitignore
@@ -83,3 +84,5 @@
 	default = current
 [rebase]
 	autosquash = true
+[git-up "bundler"]
+	check = true
