@@ -9,7 +9,6 @@ alias ls='ls --color=tty'
 alias l='ls -la'
 alias clip='xclip -sel clip'
 alias dir-here='nautilus .'
-alias dokku='$HOME/.dokku/contrib/dokku_client.sh'
 
 alias reset-nul="sudo rm /dev/null && sudo mknod -m 0666 /dev/null c 1 3"
 alias my-pm-sleep-1="sudo sh /etc/acpi/sleep.sh force"
@@ -71,4 +70,10 @@ function orlin () {
 
 function batch-js2coffee () {
   find "$@" -name "*.js" -print -exec sh -c "js2coffee '{}' > '{}.coffee' && rm '{}'" -- {} \;
+}
+
+function gdrive_download () {
+  CONFIRM=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate "https://docs.google.com/uc?export=download&id=$1" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')
+  wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$CONFIRM&id=$1" -O $2
+  rm -rf /tmp/cookies.txt
 }

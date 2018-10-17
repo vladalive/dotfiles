@@ -43,9 +43,6 @@ set noerrorbells
 
 set t_Co=256
 
-" set background=dark
-set background=light
-
 " option name default optional
 let g:solarized_termcolors= 256
 let g:solarized_termtrans = 1
@@ -58,6 +55,9 @@ let g:solarized_visibility= "normal"
 
 color desert
 colorscheme solarized
+
+" set background=dark
+set background=light
 
 " call togglebg#map("<F5>")
 
@@ -128,6 +128,9 @@ nmap <Leader>_ :set background=dark<CR>
 au BufRead,BufNewFile *.thor set filetype=ruby
 au BufRead,BufNewFile *.rabl setf ruby
 au BufRead,BufNewFile *.hamlc set ft=haml
+au BufRead,BufNewFile *.pug.html set filetype=pug
+au BufRead,BufNewFile *.jst.eco set ft=eco.html
+au BufRead,BufNewFile *.citrus set ft=citrus
 
 " let g:snipMate.scope_aliases['ruby'] = 'ruby,ruby-rails,myruby'
 let g:snippets_dir = "~/.vim/snippets"
