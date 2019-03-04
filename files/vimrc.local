@@ -152,3 +152,5 @@ let g:syntastic_check_on_wq = 0
 "let g:syntastic_coffee_checkers = ['coffeelint']
 
 nmap <Leader>s :SyntasticToggleMode<CR>
+
+runtime macros/matchit.vim
