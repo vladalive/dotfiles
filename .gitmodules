@@ -10,3 +10,6 @@
 [submodule "files/janus/vim-rake"]
 	path = files/janus/vim-rake
 	url = https://github.com/tpope/vim-rake.git
+[submodule "files/janus/vim-unimpaired"]
+	path = files/janus/vim-unimpaired
+	url = https://github.com/tpope/vim-unimpaired.git
