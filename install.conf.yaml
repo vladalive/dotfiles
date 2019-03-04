@@ -12,6 +12,7 @@
     ~/.vimrc.after: 'files/vimrc.local'
     ~/.gvimrc.local: 'files/gvimrc.local'
     ~/.tmux.conf: 'files/tmux.conf'
+    ~/.janus: 'files/janus'
 
 - shell:
   - [git submodule update --init --recursive, Installing submodules]
