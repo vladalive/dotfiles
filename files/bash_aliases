@@ -24,22 +24,6 @@ alias test-bandwith="wget --output-document=/dev/null http://speedtest.wdc01.sof
 
 alias tail-log="tail -f log/development.log"
 
-function gitac () {
-  git add -u && git add . && git commit -am "$@";
-}
-
-function git-ri () {
-  git rebase -i HEAD~$1;
-}
-
-function git-clean () {
-  git clean -fd && git reset --hard && git status
-}
-
-function git-blame-all () {
-  git branch | while read branch; do git --no-pager blame $branch $1; done
-}
-
 function git-grep-all () {
   git branch | while read branch; do git --no-pager grep $1 $branch $2; done
 }
@@ -47,8 +31,6 @@ function git-grep-all () {
 function git-log-my () {
   for k in `git branch|perl -pe 's/^..//'`;do echo -e `git show --since="1 $1 ago" --author="$(git config user.name)" --pretty=format:"%Cgreen%ci %Cblue%cr%Creset" $k|head -n 1`\\t$k;done|sort -r|grep :
 }
-
-alias branch-names="perl -pe 's/^.*\t//'"
 
 function dg () {
   grep -rl --exclude-dir tmp --exclude *.log "$@" *;
