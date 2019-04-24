@@ -1,30 +1,35 @@
 [user]
-	name = Vlad Alive
-	email = vladalive@gmail.com
+  name = Vlad Alive
+  email = vladalive@gmail.com
 
 [color]
-	diff = auto
-	status = auto
-	branch = auto
-	ui = true
+  diff = auto
+  status = auto
+  branch = auto
+  ui = true
 
 [rerere]
-	enabled = 1
+  enabled = 1
 
 [alias]  # shortcuts
-  b      = branch
+  s      = status
   c      = checkout
-  co     = commit
-  d      = diff -b
+  b      = branch
+
+  d      = diff
+  dw     = diff -b -w
   dc     = diff -b --cached
   ds     = diff -b --stat
   dst    = diff --staged
-  s      = status
 
+  co     = commit
   cof    = commit -m 'f'
-  rebim  = rebase -i master
+
   rebm   = rebase master
+  rebim  = rebase -i master
   rebi   = rebase -i
+  rebi1  = rebase -i HEAD~1
+  rebi2  = rebase -i HEAD~2
 
   # summary of what you're going to push
   ps     = log --pretty=oneline origin..
@@ -42,50 +47,54 @@
   lmw    = log --author='Vlad Alive' --since='1 week'
   lmm    = log --author='Vlad Alive' --since='1 month'
   lg     = log --graph --all --abbrev-commit --decorate --date=relative \
-               --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
+    --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
 
   logsum = shortlog --numbered --summary --email
 
-  g = grep --break --heading --line-number
-  gn = grep --name-only
-	create-pull-request = !sh -c 'stash pull-request $0 $@'
+  g      = grep --break --heading --line-number
+  gn     = grep --name-only
+
+  create-pull-request = !sh -c 'stash pull-request $0 $@'
 
 [core]
-	excludesfile = ~/.gitignore
-	autocrlf = input
+  excludesfile = ~/.gitignore
+  autocrlf = input
 
 [github]
-	user = vladalive
+  user = vladalive
 
 [credential]
-	helper = cache
+  helper = cache
 
 [gist]
-	private = yes
+  private = yes
 
 [grep]
-	lineNumber = true
+  lineNumber = true
   patternType = extended
 
 [diff]
-	tool = vimdiff
-	compactionHeuristic = true
+  tool = vimdiff
+  compactionHeuristic = true
 
 [merge]
-	tool = vimdiff
+  tool = vimdiff
 
 [mergetool]
-	prompt = false
-	keepBackup = false
+  prompt = false
+  keepBackup = false
 
 [difftool]
-	prompt = false
+  prompt = false
 
 [push]
-	default = current
+  default = current
+
 [rebase]
-	autosquash = true
+  autosquash = true
+
 [git-up "bundler"]
-	check = true
+  check = true
+
 [remote "origin"]
-	fetch = +refs/pull/*/head:refs/remotes/origin/pr/*
+  fetch = +refs/pull/*/head:refs/remotes/origin/pr/*
