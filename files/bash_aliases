@@ -62,12 +62,6 @@ function wpid () {
   ps aux | grep "$@" | grep -v "grep" | grep "$USER\s*[[:digit:]]*"
 }
 
-function orlin () {
-  echo $@ > .app_branch
-  cp tmp/files/config/database.$@.yml config/database.yml
-  rm config/sphinx.yml
-}
-
 function batch-js2coffee () {
   find "$@" -name "*.js" -print -exec sh -c "js2coffee '{}' > '{}.coffee' && rm '{}'" -- {} \;
 }
