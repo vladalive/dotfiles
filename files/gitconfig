@@ -44,7 +44,7 @@
   lg     = log --graph --all --abbrev-commit --decorate --date=relative \
                --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
 
-  logsum = shortlog --numbered --summary
+  logsum = shortlog --numbered --summary --email
 
   g = grep --break --heading --line-number
   gn = grep --name-only
