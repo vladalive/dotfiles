@@ -21,6 +21,7 @@
   dc     = diff -b --cached
   ds     = diff -b --stat
   dst    = diff --staged
+  dn     = diff --name-only
 
   co     = commit
   cof    = commit -m 'f'
@@ -98,3 +99,6 @@
 
 # [remote "origin"]
 #   fetch = +refs/pull/*/head:refs/remotes/origin/pr/*
+[mergetool "diffconflicts"]
+	cmd = vim -c DiffConflicts \"$MERGED\" \"$BASE\" \"$LOCAL\" \"$REMOTE\"
+	trustExitCode = true
