@@ -32,6 +32,10 @@ function git-log-my () {
   for k in `git branch|perl -pe 's/^..//'`;do echo -e `git show --since="1 $1 ago" --author="$(git config user.name)" --pretty=format:"%Cgreen%ci %Cblue%cr%Creset" $k|head -n 1`\\t$k;done|sort -r|grep :
 }
 
+function git-logrep () {
+  git log --oneline | grep "$1" | less
+}
+
 function dg () {
   grep -rl --exclude-dir tmp --exclude *.log "$@" *;
 }
@@ -52,4 +56,57 @@ function gdrive_download () {
   CONFIRM=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate "https://docs.google.com/uc?export=download&id=$1" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')
   wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$CONFIRM&id=$1" -O $2
   rm -rf /tmp/cookies.txt
+}
+
+function date_stamp () {
+  date -u "+%F-%H%M%S"
+}
+
+function backups_save () {
+  APP_NAME=$1
+  TYPE_NAME=$2
+  SOURCE=$3
+
+  DATESTAMP=$(date_stamp)
+  TMP_PATH="/home/deployer/tmp"
+  BACKUP_ROOT_PATH="/mnt/vladalive-bucket-01/backups/apps"
+  BACKUP_PATH="$BACKUP_ROOT_PATH/$APP_NAME"
+  OUTPUT_FILE_NAME="$DATESTAMP-$APP_NAME-$TYPE_NAME.tar.gz"
+
+  tar cv $SOURCE | gzip -9 > "$TMP_PATH/$OUTPUT_FILE_NAME"
+  mkdir -p "$TMP_PATH"
+  mkdir -p "$BACKUP_PATH"
+  mv "$TMP_PATH/$OUTPUT_FILE_NAME" "$BACKUP_PATH"
+  echo "Backup: $OUTPUT_FILE_NAME"
+  echo "Saved to: $BACKUP_PATH"
+}
+
+function backups_save_db_docker_pg () {
+  DB_FILE=./db.sql
+
+  backups_db_docker_pg_dump $2
+  backups_save $1 db $DB_FILE
+  rm $DB_FILE
+}
+
+function backups_save_db_dokku_pg () {
+  DB_FILE=./db.sql
+
+  backups_db_dokku_pg_dump $2
+  backups_save $1 db $DB_FILE
+  rm $DB_FILE
+}
+
+function backups_db_docker_pg_dump () {
+  CONTAINER_NAME=$1
+  DB_FILE=./db.sql
+
+  docker exec -t $CONTAINER_NAME pg_dumpall -c -U postgres > $DB_FILE
+}
+
+function backups_db_dokku_pg_dump () {
+  CONTAINER_NAME=$1
+  DB_FILE=./db.sql
+
+  dokku postgres:export $CONTAINER_NAME > $DB_FILE
 }
