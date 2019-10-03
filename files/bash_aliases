@@ -7,9 +7,11 @@ export TERM=screen-256color
 
 alias ls='ls --color=tty'
 alias l='ls -la'
+alias less='less -S'
 alias clip='xclip -sel clip'
 alias dir-here='nautilus .'
 
+alias my-update="sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get autoremove -y && sudo apt-get autoremove --purge && sudo apt-get autoclean && sudo apt-get clean"
 alias reset-nul="sudo rm /dev/null && sudo mknod -m 0666 /dev/null c 1 3"
 alias my-pm-sleep-1="sudo sh /etc/acpi/sleep.sh force"
 alias my-pm-sleep-2="sudo pm-suspend"
@@ -23,6 +25,30 @@ alias umount_dingoo="sudo umount /dev/sdb"
 alias test-bandwith="wget --output-document=/dev/null http://speedtest.wdc01.softlayer.com/downloads/test500.zip"
 
 alias tail-log="tail -f log/development.log"
+
+function git-changes-rubocop () {
+  TARGET=${1:-HEAD~0}
+  FILES=`git diff-tree --no-commit-id --name-only -r $TARGET`
+  echo "git diff: $TARGET"
+  echo 'Files:'
+  echo $FILES
+  echo $FILES | xargs rubocop --force-exclusion
+}
+
+function git-changes-rspec () {
+  TARGET=${1:-HEAD~0}
+  MASK=${2:-"spec/.*.rb"}
+  FILES=`git diff-tree --no-commit-id --name-only -r $TARGET | grep $MASK`
+  echo "git diff: $TARGET"
+  if [ -z "$FILES" ]
+  then
+    echo "No spec files changed"
+  else
+    echo 'Files:'
+    echo $FILES
+    echo $FILES | xargs rspec
+  fi
+}
 
 function git-grep-all () {
   git branch | while read branch; do git --no-pager grep $1 $branch $2; done
