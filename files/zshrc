@@ -82,23 +82,13 @@ source $ZSH/oh-my-zsh.sh
 setopt INTERACTIVE_COMMENTS
 unsetopt correct_all
 
-if [ -f ~/.bash_profile ]; then
-    . ~/.bash_profile
-fi
+# disable CTRL+s in shell
+stty -ixon
 
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
 
-gitac() { git add -u && git add . && git commit -am "$@"; }
-git-ri() { git rebase -i HEAD~$1; }
-dg() { grep -rl --exclude-dir tmp --exclude "*.log" "$@" *; }
-
-export PATH="$PATH:/usr/local/heroku/bin"
-export PATH="$PATH:$HOME/local/bin"
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
-# [[ -s ".rvmrc" ]] && source ".rvmrc"
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+if [ -f ~/.bash_profile ]; then
+    . ~/.bash_profile
+fi

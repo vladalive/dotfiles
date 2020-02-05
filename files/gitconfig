@@ -56,6 +56,7 @@
   gn     = grep --name-only
 
   create-pull-request = !sh -c 'stash pull-request $0 $@'
+  up = pull --rebase --autostash
 
 [core]
   excludesfile = ~/.gitignore
@@ -93,6 +94,7 @@
 
 [rebase]
   autosquash = true
+  autoStash = true
 
 [git-up "bundler"]
   check = true
@@ -102,3 +104,5 @@
 [mergetool "diffconflicts"]
 	cmd = vim -c DiffConflicts \"$MERGED\" \"$BASE\" \"$LOCAL\" \"$REMOTE\"
 	trustExitCode = true
+[pull]
+  rebase = true
