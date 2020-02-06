@@ -113,8 +113,6 @@ if ! shopt -oq posix; then
   fi
 fi
 
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
-
 export PATH=$PATH:$HOME/dev/bin/sh
 export PATH=$PATH:$HOME/local/bin
 export CHROME_BIN=/usr/bin/google-chrome
