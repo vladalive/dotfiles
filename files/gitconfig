@@ -27,7 +27,9 @@
   cof    = commit -m 'f'
 
   rebm   = rebase master
+  rebd   = rebase develop
   rebim  = rebase -i master
+  rebid  = rebase -i develop
   rebi   = rebase -i
   rebi1  = rebase -i HEAD~1
   rebi2  = rebase -i HEAD~2
@@ -43,6 +45,7 @@
 
   lo     = log --oneline
   lom    = log --oneline master..
+  lod    = log --oneline develop..
   lm     = log --pretty=format:'%an | %s'
   lmd    = log --author='Vlad Alive' --since='1 day'
   lmw    = log --author='Vlad Alive' --since='1 week'
@@ -54,6 +57,9 @@
 
   g      = grep --break --heading --line-number
   gn     = grep --name-only
+  grepa  = grep -A 5
+  grepb  = grep -B 5
+  grepc  = grep -C 5
 
   create-pull-request = !sh -c 'stash pull-request $0 $@'
   up = pull --rebase --autostash

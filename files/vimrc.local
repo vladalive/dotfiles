@@ -56,8 +56,8 @@ let g:solarized_visibility= "normal"
 color desert
 colorscheme solarized
 
-set background=dark
-" set background=light
+" set background=dark
+set background=light
 
 " call togglebg#map("<F5>")
 
