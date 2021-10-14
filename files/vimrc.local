@@ -68,6 +68,7 @@ map <Leader>n :NERDTreeToggle<CR>
 " map <F8> :NERDTreeToggle<CR>
 " map <F8> <plug>NERDTreeTabsToggle<CR>
 let NERDTreeWinPos='left'
+let NERDTreeIgnore=['node_modules']
 
 map <Leader><Leader> :ZoomWin<CR>
 
