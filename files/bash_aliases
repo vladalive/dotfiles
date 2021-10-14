@@ -25,6 +25,7 @@ alias umount_dingoo="sudo umount /dev/sdb"
 alias test-bandwith="wget --output-document=/dev/null http://speedtest.wdc01.softlayer.com/downloads/test500.zip"
 
 alias tail-log="tail -f log/development.log"
+alias mosh-kill="pgrep mosh-server | grep -v $(ps -o ppid --no-headers $$) | xargs kill"
 
 gitac() { git add -u && git add . && git commit -am "$@"; }
 git-ri() { git rebase -i HEAD~$1; }
