@@ -112,3 +112,13 @@
 	trustExitCode = true
 [pull]
   rebase = true
+[gitflow "branch"]
+	master = develop
+	develop = master
+[gitflow "prefix"]
+	feature = feature/
+	bugfix = bugfix/
+	release = release/
+	hotfix = hotfix/
+	support = support/
+	versiontag = 
