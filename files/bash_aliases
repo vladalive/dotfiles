@@ -59,12 +59,28 @@ function git-grep-all () {
   git branch | while read branch; do git --no-pager grep $1 $branch $2; done
 }
 
+function git-grep-replace () {
+  git grep -l "$1" | xargs sed -i "s/$1/$2/g"
+}
+
 function git-log-my () {
   for k in `git branch|perl -pe 's/^..//'`;do echo -e `git show --since="1 $1 ago" --author="$(git config user.name)" --pretty=format:"%Cgreen%ci %Cblue%cr%Creset" $k|head -n 1`\\t$k;done|sort -r|grep :
 }
 
 function git-logrep () {
   git log --oneline | grep "$1" | less
+}
+
+function git-grep-html () {
+  git grep "$1" -- '*.html' '*.haml' '*.jade' '*.pug' '*.vue'
+}
+
+function git-grep-css () {
+  git grep "$1" -- '*.css' '*.scss' '*.sass' '*.styl' '*.less'
+}
+
+function git-grep-js () {
+  git grep "$1" -- '*.js' '*.coffee' '*.ts'
 }
 
 function dg () {
