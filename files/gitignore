@@ -8,6 +8,7 @@
 node_modules
 npm-debug.log
 config/initializers/pry.rb
+config/initializers/server.rb
 NOTES.txt
 dump.rdb
 config/database.yml
