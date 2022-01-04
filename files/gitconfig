@@ -28,11 +28,16 @@
 
   rebm   = rebase master
   rebd   = rebase develop
+  rebp   = rebase production
   rebim  = rebase -i master
   rebid  = rebase -i develop
+  rebip  = rebase -i production
   rebi   = rebase -i
   rebi1  = rebase -i HEAD~1
   rebi2  = rebase -i HEAD~2
+  rebi3  = rebase -i HEAD~3
+  rebi4  = rebase -i HEAD~4
+  rebi5  = rebase -i HEAD~5
 
   # summary of what you're going to push
   ps     = log --pretty=oneline origin..
@@ -46,6 +51,7 @@
   lo     = log --oneline
   lom    = log --oneline master..
   lod    = log --oneline develop..
+  lop    = log --oneline production..
   lm     = log --pretty=format:'%an | %s'
   lmd    = log --author='Vlad Alive' --since='1 day'
   lmw    = log --author='Vlad Alive' --since='1 week'
@@ -67,6 +73,7 @@
 [core]
   excludesfile = ~/.gitignore
   autocrlf = input
+  pager = diff-so-fancy | less --tabs=4 -cR
 
 [github]
   user = vladalive
@@ -122,3 +129,18 @@
 	hotfix = hotfix/
 	support = support/
 	versiontag = 
+[color "diff-highlight"]
+	oldNormal = red bold
+	oldHighlight = red bold 52
+	newNormal = green bold
+	newHighlight = green bold 22
+[color "diff"]
+	meta = 11
+	frag = magenta bold
+	func = 146 bold
+	commit = yellow bold
+	old = red bold
+	new = green bold
+	whitespace = red reverse
+[interactive]
+	diffFilter = diff-so-fancy --patch
