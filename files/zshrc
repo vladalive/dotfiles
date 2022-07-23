@@ -101,6 +101,14 @@ export PATH="$PATH:$HOME/local/bin"
 
 if [ -f '/home/deployer/yandex-cloud/path.bash.inc' ]; then source '/home/deployer/yandex-cloud/path.bash.inc'; fi
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+export PATH="$PATH:$HOME/.rvm/bin"
+
+export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+
+# fnm
+export PATH=/home/deployer/.fnm:$PATH
+eval "`fnm env`"
+
+# gpg
+export GPG_TTY=$(tty)
