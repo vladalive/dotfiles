@@ -1,6 +1,7 @@
 [user]
   name = Vlad Alive
   email = vladalive@gmail.com
+  signingkey = 2A85D69EF954C48D
 
 [color]
   diff = auto
@@ -73,7 +74,10 @@
 [core]
   excludesfile = ~/.gitignore
   autocrlf = input
-  pager = diff-so-fancy | less --tabs=4 -cR
+  # pager = diff-so-fancy | less --tabs=4 -cR
+  # pager = delta
+  pager = delta --diff-so-fancy | less --tabs=4 -cRS
+  # pager = delta | less --tabs=4 -cRS
 
 [github]
   user = vladalive
@@ -91,9 +95,11 @@
 [diff]
   tool = vimdiff
   compactionHeuristic = true
+  colorMoved = default
 
 [merge]
   tool = vimdiff
+  conflictstyle = diff3
 
 [mergetool]
   prompt = false
@@ -142,5 +148,26 @@
 	old = red bold
 	new = green bold
 	whitespace = red reverse
+[diff-so-fancy]
+  useUnicodeRuler = true
 [interactive]
-	diffFilter = diff-so-fancy --patch
+  # diffFilter = diff-so-fancy --patch
+  # diffFilter = delta --color-only
+  diffFilter = delta --diff-so-fancy
+[delta "decorations"]
+  # side-by-side = true
+  # line-numbers = true
+  commit-decoration-style = blue ol
+  commit-style = raw
+  file-style = omit
+  hunk-header-decoration-style = blue box
+  hunk-header-file-style = red
+  hunk-header-line-number-style = "#067a00"
+  hunk-header-style = file line-number syntax
+[delta]
+  navigate = true
+  light = false
+  # features = decorations
+  # features = unobtrusive-line-numbers decorations
+[commit]
+  gpgsign = true
