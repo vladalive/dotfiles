@@ -83,6 +83,14 @@ function git-grep-js () {
   git grep "$1" -- '*.js' '*.coffee' '*.ts'
 }
 
+function git-grep-ruby () {
+  git grep "$1" -- '*.rb'
+}
+
+function git-branch-upstream () {
+  git branch --show-current | xargs -I{} sh -c 'git branch -u origin/$1' -- {}
+}
+
 function dg () {
   grep -rl --exclude-dir tmp --exclude *.log "$@" *;
 }
