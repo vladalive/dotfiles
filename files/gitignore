@@ -3,6 +3,7 @@
 .bundle
 .rake_tasks~
 .rvmrc
+.node-version
 .DS_Store
 .sass-cache/
 node_modules
@@ -16,3 +17,6 @@ db/*.sqlite*
 log/*.log
 tmp/
 tags
+
+/app/assets/builds/*
+!/app/assets/builds/.keep
