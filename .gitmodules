@@ -14,6 +14,3 @@
 [submodule "files/janus/vim-unimpaired"]
 	path = files/janus/vim-unimpaired
 	url = https://github.com/tpope/vim-unimpaired.git
-[submodule "files/janus/vim-wakatime"]
-	path = files/janus/vim-wakatime
-	url = git://github.com/wakatime/vim-wakatime.git
