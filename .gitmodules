@@ -1,6 +1,7 @@
 [submodule "dotbot"]
 	path = dotbot
 	url = https://github.com/anishathalye/dotbot
+	ignore = dirty
 [submodule "files/janus/vim-ruby"]
 	path = files/janus/vim-ruby
 	url = https://github.com/vim-ruby/vim-ruby.git
