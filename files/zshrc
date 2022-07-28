@@ -47,7 +47,7 @@ DISABLE_AUTO_UPDATE="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git git-flow-completion debian)
+plugins=(git git-flow-completion debian asdf)
 
 # User configuration
 
@@ -101,9 +101,6 @@ export PATH="$PATH:$HOME/local/bin"
 
 if [ -f '/home/deployer/yandex-cloud/path.bash.inc' ]; then source '/home/deployer/yandex-cloud/path.bash.inc'; fi
 
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-export PATH="$PATH:$HOME/.rvm/bin"
-
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
 # fnm
@@ -112,3 +109,13 @@ eval "`fnm env`"
 
 # gpg
 export GPG_TTY=$(tty)
+
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+# export PATH="$PATH:$HOME/.rvm/bin"
+
+# rbenv
+eval "$(rbenv init -)"
+
+# fnm
+export PATH=/home/deployer/.fnm:$PATH
+eval "`fnm env`"

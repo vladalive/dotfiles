@@ -1,4 +1,5 @@
 .ruby-gemset
+.tool-versions
 .svn
 .bundle
 .rake_tasks~
