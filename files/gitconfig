@@ -1,7 +1,7 @@
 [user]
   name = Vlad Alive
   email = vladalive@gmail.com
-  signingkey = 2A85D69EF954C48D
+  signingkey = 94CEB581D3EFE7D1
 
 [color]
   diff = auto
