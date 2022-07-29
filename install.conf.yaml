@@ -13,6 +13,8 @@
     ~/.gvimrc.local: 'files/gvimrc.local'
     ~/.tmux.conf: 'files/tmux.conf'
     ~/.janus: 'files/janus'
+    ~/.default-gems: 'files/default-gems'
+    ~/.asdfrc: 'files/asdfrc'
 
 - shell:
   - [git submodule update --init --recursive, Installing submodules]

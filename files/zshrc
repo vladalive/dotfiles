@@ -103,19 +103,5 @@ if [ -f '/home/deployer/yandex-cloud/path.bash.inc' ]; then source '/home/deploy
 
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
-# fnm
-export PATH=/home/deployer/.fnm:$PATH
-eval "`fnm env`"
-
 # gpg
 export GPG_TTY=$(tty)
-
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-# export PATH="$PATH:$HOME/.rvm/bin"
-
-# rbenv
-eval "$(rbenv init -)"
-
-# fnm
-export PATH=/home/deployer/.fnm:$PATH
-eval "`fnm env`"
