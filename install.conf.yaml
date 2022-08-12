@@ -15,6 +15,7 @@
     ~/.janus: 'files/janus'
     ~/.default-gems: 'files/default-gems'
     ~/.asdfrc: 'files/asdfrc'
+    ~/.ctags: 'files/ctags'
 
 - shell:
   - [git submodule update --init --recursive, Installing submodules]
