@@ -1,0 +1,84 @@
+require:
+  - rubocop-rails
+  - rubocop-rspec
+
+AllCops:
+  # TargetRubyVersion: 3.1
+  DisplayCopNames: true
+  DisplayStyleGuide: true
+  NewCops: enable
+
+Metrics/ClassLength:
+  Max: 200
+  CountComments: false
+
+Metrics/MethodLength:
+  Max: 15
+
+Metrics/BlockLength:
+  Max: 200
+  Exclude:
+    - 'spec/**/*'
+
+Style/BlockDelimiters:
+  Exclude:
+    - 'spec/**/*'
+
+Layout/EmptyLinesAroundModuleBody:
+  Enabled: false
+
+Layout/EmptyLinesAroundClassBody:
+  Enabled: false
+
+Layout/EmptyLinesAroundBlockBody:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/BlockComments:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Layout/CommentIndentation:
+  Enabled: false
+
+Layout/IndentationWidth:
+  Enabled: false
+
+Layout/HashAlignment:
+  Enabled: true
+  EnforcedColonStyle: key
+
+Layout/MultilineHashBraceLayout:
+  EnforcedStyle: new_line
+
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: no_space
+
+Layout/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+Layout/ParameterAlignment:
+  EnforcedStyle: with_fixed_indentation
+
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_fixed_indentation
+
+Style/TrailingCommaInArguments:
+  EnforcedStyle: comma
+
+Bundler/OrderedGems:
+  Enabled: false
+
+RSpec/ContextWording:
+  Exclude:
+    - 'spec/shared_*/*'
