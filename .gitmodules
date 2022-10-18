@@ -17,3 +17,6 @@
 [submodule "files/janus/vim-wakatime"]
 	path = files/janus/vim-wakatime
 	url = https://github.com/wakatime/vim-wakatime.git
+[submodule "files/janus/ale"]
+	path = files/janus/ale
+	url = https://github.com/dense-analysis/ale.git
