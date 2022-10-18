@@ -156,4 +156,13 @@ let g:syntastic_check_on_wq = 0
 
 nmap <Leader>s :SyntasticToggleMode<CR>
 
+let g:ale_linters = {
+  \ 'ruby': ['rubocop'],
+  \ 'javascript': ['eslint'],
+  \ }
+
+let g:ale_fixers = {
+  \ '*': ['remove_trailing_lines', 'trim_whitespace'],
+  \ }
+
 runtime macros/matchit.vim
