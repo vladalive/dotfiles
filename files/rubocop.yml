@@ -76,6 +76,9 @@ Style/TrailingCommaInArguments:
 Style/TrailingCommaInArrayLiteral:
   EnforcedStyle: comma
 
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyle: comma
+
 Bundler/OrderedGems:
   Enabled: false
 
