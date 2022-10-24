@@ -37,7 +37,7 @@ function git-changes-rubocop () {
   echo "git diff: $TARGET"
   echo 'Files:'
   echo $FILES
-  echo $FILES | xargs rubocop --force-exclusion
+  echo $FILES | xargs bundle exec rubocop --force-exclusion
 }
 
 function git-changes-rspec () {
@@ -51,7 +51,7 @@ function git-changes-rspec () {
   else
     echo 'Files:'
     echo $FILES
-    echo $FILES | xargs rspec
+    echo $FILES | xargs bundle exec rspec
   fi
 }
 
@@ -89,6 +89,10 @@ function git-grep-ruby () {
 
 function git-branch-upstream () {
   git branch --show-current | xargs -I{} sh -c 'git branch -u origin/$1' -- {}
+}
+
+function git-branch-remove-merged () {
+  git branch --merged | egrep -v "(^\*|master|main|develop)" | xargs xargs git branch -d
 }
 
 function dg () {
