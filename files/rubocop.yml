@@ -45,6 +45,9 @@ Style/BlockComments:
 Style/FrozenStringLiteralComment:
   Enabled: false
 
+Style/MutableConstant:
+  Enabled: false
+
 Layout/CommentIndentation:
   Enabled: false
 
@@ -71,13 +74,13 @@ Layout/ArgumentAlignment:
   EnforcedStyle: with_fixed_indentation
 
 Style/TrailingCommaInArguments:
-  EnforcedStyle: comma
+  EnforcedStyleForMultiline: comma
 
 Style/TrailingCommaInArrayLiteral:
-  EnforcedStyle: comma
+  EnforcedStyleForMultiline: comma
 
 Style/TrailingCommaInHashLiteral:
-  EnforcedStyle: comma
+  EnforcedStyleForMultiline: comma
 
 Bundler/OrderedGems:
   Enabled: false
