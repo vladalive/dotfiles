@@ -169,3 +169,22 @@ function backups_db_dokku_pg_dump () {
 
   dokku postgres:export $CONTAINER_NAME > $DB_FILE
 }
+
+function rails-db-test-setup () {
+  echo "bundle exec rails db:{environment:set,drop,create,schema:load,migrate}"
+  RAILS_ENV=test \
+    bundle exec rails \
+      db:environment:set \
+      db:drop \
+      db:create \
+      db:schema:load \
+      db:migrate
+}
+
+function rails-db-migrate () {
+  echo "bundle exec rails db:{environment:set,migrate}"
+  RAILS_ENV=development \
+    bundle exec rails \
+      db:environment:set \
+      db:migrate
+}
