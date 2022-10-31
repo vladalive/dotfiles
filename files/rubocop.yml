@@ -82,6 +82,9 @@ Style/TrailingCommaInArrayLiteral:
 Style/TrailingCommaInHashLiteral:
   EnforcedStyleForMultiline: comma
 
+Style/FetchEnvVar:
+  Enabled: false
+
 Bundler/OrderedGems:
   Enabled: false
 
