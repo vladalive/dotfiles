@@ -32,17 +32,17 @@ git-ri() { git rebase -i HEAD~$1; }
 dg() { grep -rl --exclude-dir tmp --exclude "*.log" "$@" *; }
 
 function git-changes-rubocop () {
-  TARGET=${1:-HEAD~0}
+  TARGET=${1:-master..}
   FILES=`git diff-tree --no-commit-id --name-only -r $TARGET`
   echo "git diff: $TARGET"
   echo 'Files:'
   echo $FILES
-  echo $FILES | xargs bundle exec rubocop --force-exclusion
+  echo $FILES | xargs -r bundle exec rubocop --force-exclusion
 }
 
 function git-changes-rspec () {
-  TARGET=${1:-HEAD~0}
-  MASK=${2:-"spec/.*.rb"}
+  TARGET=${1:-master..}
+  MASK=${2:-"spec/.*_spec.rb"}
   FILES=`git diff-tree --no-commit-id --name-only -r $TARGET | grep $MASK`
   echo "git diff: $TARGET"
   if [ -z "$FILES" ]
@@ -51,7 +51,7 @@ function git-changes-rspec () {
   else
     echo 'Files:'
     echo $FILES
-    echo $FILES | xargs bundle exec rspec
+    echo $FILES | xargs -r bundle exec rspec
   fi
 }
 
