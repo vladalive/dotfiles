@@ -20,3 +20,6 @@
 [submodule "files/janus/ale"]
 	path = files/janus/ale
 	url = https://github.com/dense-analysis/ale.git
+[submodule "files/janus/vim-vue"]
+	path = files/janus/vim-vue
+	url = https://github.com/posva/vim-vue.git
