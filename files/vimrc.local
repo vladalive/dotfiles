@@ -156,9 +156,12 @@ let g:syntastic_check_on_wq = 0
 
 nmap <Leader>s :SyntasticToggleMode<CR>
 
+let g:vue_pre_processors = 'detect_on_enter'
+
 let g:ale_linters = {
   \ 'ruby': ['rubocop'],
   \ 'javascript': ['eslint'],
+  \ 'vue': ['javascript', 'html', 'stylus'],
   \ }
 
 let g:ale_fixers = {
