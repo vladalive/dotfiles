@@ -25,7 +25,7 @@ alias umount_dingoo="sudo umount /dev/sdb"
 alias test-bandwith="wget --output-document=/dev/null http://speedtest.wdc01.softlayer.com/downloads/test500.zip"
 
 alias tail-log="tail -f log/development.log"
-alias mosh-kill="pgrep mosh-server | grep -v $(ps -o ppid --no-headers $$) | xargs kill"
+alias mosh-kill="pgrep mosh-server | grep -v $(ps -o ppid --no-headers $$) | xargs -r kill"
 
 gitac() { git add -u && git add . && git commit -am "$@"; }
 git-ri() { git rebase -i HEAD~$1; }
@@ -60,7 +60,7 @@ function git-grep-all () {
 }
 
 function git-grep-replace () {
-  git grep -l "$1" | xargs sed -i "s/$1/$2/g"
+  git grep -l "$1" | xargs -r sed -i "s/$1/$2/g"
 }
 
 function git-log-my () {
@@ -88,11 +88,11 @@ function git-grep-ruby () {
 }
 
 function git-branch-upstream () {
-  git branch --show-current | xargs -I{} sh -c 'git branch -u origin/$1' -- {}
+  git branch --show-current | xargs -r -I{} sh -c 'git branch -u origin/$1' -- {}
 }
 
 function git-branch-remove-merged () {
-  git branch --merged | egrep -v "(^\*|master|main|develop)" | xargs xargs git branch -d
+  git branch --merged | egrep -v "(^\*|master|main|develop)" | xargs -r git branch -d
 }
 
 function dg () {
