@@ -16,6 +16,7 @@
     ~/.default-gems: 'files/default-gems'
     ~/.asdfrc: 'files/asdfrc'
     ~/.ctags: 'files/ctags'
+    ~/.ctags.d/default.ctags: 'files/ctags'
     ~/.rubocop.yml: 'files/rubocop.yml'
 
 - shell:
