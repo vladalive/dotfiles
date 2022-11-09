@@ -37,7 +37,7 @@ function git-changes-rubocop () {
   echo "git diff: $TARGET"
   echo 'Files:'
   echo $FILES
-  echo $FILES | xargs -r bundle exec rubocop --force-exclusion
+  echo $FILES | xargs -r rubocop --force-exclusion
 }
 
 function git-changes-rspec () {
