@@ -18,6 +18,8 @@ db/*.sqlite*
 log/*.log
 tmp/
 tags
+tags.lock
+tags.temp
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
