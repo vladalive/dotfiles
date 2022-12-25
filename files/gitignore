@@ -24,3 +24,6 @@ tags.temp
 /app/assets/builds/*
 !/app/assets/builds/.keep
 .rspec.local
+.env.production.local
+.env.development.local
+.env.test.local
