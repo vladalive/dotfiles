@@ -55,6 +55,21 @@ function git-changes-rspec () {
   fi
 }
 
+function git-changes-rspec-touch () {
+  TARGET=${1:-master..}
+  MASK=${2:-"spec/.*_spec.rb"}
+  FILES=`git diff-tree --no-commit-id --name-only -r $TARGET | grep $MASK`
+  echo "git diff: $TARGET"
+  if [ -z "$FILES" ]
+  then
+    echo "No spec files changed"
+  else
+    echo 'Files:'
+    echo $FILES
+    echo $FILES | xargs -r touch
+  fi
+}
+
 function git-grep-all () {
   git branch | while read branch; do git --no-pager grep $1 $branch $2; done
 }
@@ -187,4 +202,13 @@ function rails-db-migrate () {
     bundle exec rails \
       db:environment:set \
       db:migrate
+}
+
+function git-rubocop-autocorrect-offense () {
+  OFFENSE=$@
+  COMMAND="rubocop -a --only $OFFENSE"
+  echo $COMMAND
+  eval " $COMMAND"
+  git add .
+  git commit -m "[run] $COMMAND"
 }
