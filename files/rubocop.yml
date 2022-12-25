@@ -89,5 +89,15 @@ Bundler/OrderedGems:
   Enabled: false
 
 RSpec/ContextWording:
+  Prefixes:
+    - when
+    - with
+    - without
+    - if
+    - unless
+    - for
   Exclude:
     - 'spec/shared_*/*'
+
+RSpec/NestedGroups:
+  Max: 4
