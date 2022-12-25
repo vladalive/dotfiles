@@ -129,11 +129,12 @@ nmap <Leader>+ :set background=light<CR>
 nmap <Leader>_ :set background=dark<CR>
 
 au BufRead,BufNewFile *.thor set filetype=ruby
-au BufRead,BufNewFile *.rabl setf ruby
-au BufRead,BufNewFile *.hamlc set ft=haml
+au BufRead,BufNewFile *.rabl set filetype=ruby
+au BufRead,BufNewFile *.hamlc set filetype=haml
 au BufRead,BufNewFile *.pug.html set filetype=pug
-au BufRead,BufNewFile *.jst.eco set ft=eco.html
-au BufRead,BufNewFile *.citrus set ft=citrus
+au BufRead,BufNewFile *.jst.eco set filetype=eco.html
+au BufRead,BufNewFile *.citrus set filetype=citrus
+au BufRead,BufNewFile .env.* set filetype=sh
 
 " let g:snipMate.scope_aliases['ruby'] = 'ruby,ruby-rails,myruby'
 let g:snippets_dir = "~/.vim/snippets"
