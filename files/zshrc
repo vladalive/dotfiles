@@ -5,10 +5,17 @@ source /usr/share/zsh-antigen/antigen.zsh
 
 antigen use oh-my-zsh
 antigen bundle git
+antigen bundle git-extras
 antigen bundle git-flow-completion
+antigen bundle gh
 antigen bundle debian
 antigen bundle asdf
+antigen bundle tmuxinator
+antigen bundle node
+antigen bundle npm
+antigen bundle compleat
 antigen bundle sobolevn/wakatime-zsh-plugin
+antigen bundle zsh-users/zsh-syntax-highlighting
 antigen theme kphoen
 antigen apply
 
