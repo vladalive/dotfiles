@@ -43,6 +43,8 @@ set noerrorbells
 
 set t_Co=256
 
+set langmap=ё`,йq,цw,уe,кr,еt,нy,гu,шi,щo,зp,фa,ыs,вd,аf,пg,рh,оj,лk,дl,э',яz,чx,сc,мv,иb,тn,ьm,б\\,,ю.,Ё~,ЙQ,ЦW,УE,КR,ЕT,НY,ГU,ШI,ЩO,ЗP,ФA,ЫS,ВD,АF,ПG,РH,ОJ,ЛK,ДL,Ж:,Э\\",ЯZ,ЧX,СC,МV,ИB,ТN,ЬM,Б<,Ю>
+
 " option name default optional
 let g:solarized_termcolors= 256
 let g:solarized_termtrans = 1
@@ -68,7 +70,7 @@ map <Leader>n :NERDTreeToggle<CR>
 " map <F8> :NERDTreeToggle<CR>
 " map <F8> <plug>NERDTreeTabsToggle<CR>
 let NERDTreeWinPos='left'
-let NERDTreeIgnore=['node_modules']
+let NERDTreeIgnore = ['node_modules', 'tags']
 
 map <Leader><Leader> :ZoomWin<CR>
 
@@ -127,6 +129,8 @@ nmap Q gqap
 
 nmap <Leader>+ :set background=light<CR>
 nmap <Leader>_ :set background=dark<CR>
+
+nmap <Leader>a :A<CR>
 
 au BufRead,BufNewFile *.thor set filetype=ruby
 au BufRead,BufNewFile *.rabl set filetype=ruby
