@@ -18,6 +18,8 @@
     ~/.ctags: 'files/ctags'
     ~/.ctags.d/default.ctags: 'files/ctags'
     ~/.rubocop.yml: 'files/rubocop.yml'
+    ~/.config/nvim/init.vim: 'files/init.vim'
+    ~/.config/nvim/myinit.lua: 'files/myinit.lua'
 
 - shell:
   - [git submodule update --init --recursive, Installing submodules]
