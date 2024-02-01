@@ -204,6 +204,27 @@ function rails-db-migrate () {
       db:migrate
 }
 
+function rails-db-test-parallel-setup () {
+  echo "bundle exec rails db:environment:set parallel:{drop,create,load_schema,migrate}"
+  RAILS_ENV=test \
+    bundle exec rails \
+      db:environment:set \
+      db:drop \
+      db:create \
+      parallel:drop \
+      parallel:create \
+      parallel:load_schema \
+      parallel:migrate
+}
+
+function rails-db-parallel-migrate () {
+  echo "bundle exec rails db:environment:set parallel:migrate"
+  RAILS_ENV=test \
+    bundle exec rails \
+      db:environment:set \
+      parallel:migrate
+}
+
 function git-rubocop-autocorrect-offense () {
   OFFENSE=$@
   COMMAND="rubocop -a --only $OFFENSE"
@@ -211,4 +232,35 @@ function git-rubocop-autocorrect-offense () {
   eval " $COMMAND"
   git add .
   git commit -m "[run] $COMMAND"
+}
+
+function worklog-total () {
+  CMD=' '
+  CMD+='$/ = "!"; '
+  CMD+='total = STDIN.gets.split("\n").compact.map(&:to_s).map(&:strip).map { |i| i[/\[([\d\.]*)\]/, 1]&.to_f }.map { |i| puts "value: #{i}"; i }.compact.sum; '
+  CMD+='puts "total: #{total}"; '
+  ruby -e $CMD
+}
+
+function git-rebase-all () {
+  BASE=${1:-master}
+  git checkout $BASE
+  for branch in `git branch --no-merged | grep -v $BASE`; do
+    git checkout $branch
+    git rebase $BASE
+    if [ $? -ne 0 ]; then
+      echo "Rebase failed in branch '$branch'"
+      git rebase --abort
+    fi
+  done
+  git checkout $BASE
+}
+
+function gh-pr-create-statusgator () {
+  URL=$1
+  ISSUE_NUMBER=$(echo $URL | grep -o '[0-9]\+' | tail -1)
+  SHORT_URL=$(echo $URL | sed -n 's/^\(https\:\/\/trello\.com\/c\/\S*\)\/.*$/\1/p')
+  CMD="/usr/bin/gh pr create --base master --reviewer cbartlett,alibby --fill --body \"* [#$ISSUE_NUMBER]($SHORT_URL)\""
+  echo $CMD
+  $($CMD)
 }
