@@ -27,3 +27,5 @@ tags.temp
 .env.production.local
 .env.development.local
 .env.test.local
+.rubocop.yml
+.rubocop.local.yml
