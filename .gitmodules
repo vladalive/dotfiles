@@ -26,3 +26,6 @@
 [submodule "files/janus/vim-gutentags"]
 	path = files/janus/vim-gutentags
 	url = https://github.com/ludovicchabant/vim-gutentags.git
+[submodule "files/janus/vim-autoformat"]
+	path = files/janus/vim-autoformat
+	url = https://github.com/vim-autoformat/vim-autoformat.git
