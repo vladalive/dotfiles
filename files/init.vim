@@ -7,7 +7,7 @@ if has('nvim')
   Plug 'nvim-lua/plenary.nvim'
   Plug 'nvim-lualine/lualine.nvim'
   Plug 'romainl/Apprentice'
-  Plug 'nvim-tree/nvim-web-devicons'
+  " Plug 'nvim-tree/nvim-web-devicons'
   Plug 'nvim-tree/nvim-tree.lua'
   Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
   Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.5' }
@@ -16,6 +16,11 @@ if has('nvim')
   Plug 'folke/which-key.nvim'
   Plug 'numToStr/Comment.nvim'
   Plug 'tpope/vim-projectionist'
+  Plug 'airblade/vim-gitgutter'
+  Plug 'tpope/vim-fugitive'
+  Plug 'tpope/vim-surround'
+  Plug 'nyngwang/NeoZoom.lua'
+  Plug 'lewis6991/gitsigns.nvim'
 endif
 
 call plug#end()
@@ -38,6 +43,8 @@ set incsearch
 set ignorecase
 set smartcase
 
+set mouse=
+
 let mapleader = '\'
 
 nnoremap ; :
@@ -47,6 +54,8 @@ nmap <C-h> <C-w>h
 nmap <C-j> <C-w>j
 nmap <C-k> <C-w>k
 nmap <C-l> <C-w>l
+
+nmap Y Vy
 
 map <Leader>n :NvimTreeToggle<CR>
 nmap <Leader>a :A<CR>
