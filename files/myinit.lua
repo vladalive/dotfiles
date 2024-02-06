@@ -17,7 +17,12 @@ require('nvim-tree').setup({
   },
 })
 
-require('lualine').setup()
+require('lualine').setup({
+  sections = {
+    lualine_b = {},
+    lualine_c = {{ 'filename', path = 1, }},
+  },
+})
 
 require('neo-zoom').setup({
   popup = { enabled = false },
