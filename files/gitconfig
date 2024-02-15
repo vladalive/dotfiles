@@ -27,6 +27,7 @@
   dd     = diff develop...
 
   co     = commit
+  com    = commit -m
   cof    = commit -m 'f'
 
   rebm   = rebase master
@@ -61,6 +62,7 @@
   lmm    = log --author="$(git config user.name)" --since='1 month'
   lg     = log --graph --all --abbrev-commit --decorate --date=relative \
     --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
+  last   = log -1 HEAD --stat
 
   logsum = shortlog --numbered --summary --email
 
@@ -72,6 +74,39 @@
 
   create-pull-request = !sh -c 'stash pull-request $0 $@'
   up = pull --rebase --autostash
+
+  log-my-branches = "!f() { \
+    PERIOD=${1:-week} ;\
+    SINCE=\"1 $PERIOD ago\" ;\
+    AUTHOR=$(git config user.name) ;\
+    BRANCHES=$(git branch|perl -pe 's/^..//') ;\
+    echo \"my branches since $SINCE:\" ;\
+    for k in $BRANCHES; do \
+      COMMIT=$(git show --since=\"$SINCE\" --author=\"$AUTHOR\" --pretty=format:\"%Cgreen%ci %Cblue%cr%Creset\" $k|head -n 1) ;\
+      RESULT="$COMMIT\\\t$k" ;\
+      echo $RESULT ;\
+    done|sort -r| grep : ;\
+  }; f"
+
+  logrep = "!f() { \
+    git log --oneline | grep \"$1\" | less ;\
+  }; f"
+  grep-replace = "!f() { \
+    git grep -l \"$1\" | xargs -r sed -i "s/$1/$2/g" ;\
+  }; f"
+
+  grep-ruby = "!f() { \
+    git grep \"$1\" -- '*.rb' ;\
+  }; f"
+  grep-html = "!f() { \
+    git grep \"$1\" -- '*.html' '*.haml' '*.jade' '*.pug' '*.vue' ;\
+  }; f"
+  grep-css = "!f() { \
+    git grep \"$1\" -- '*.css' '*.scss' '*.sass' '*.styl' '*.less' ;\
+  }; f"
+  grep-js = "!f() { \
+    git grep \"$1\" -- '*.js' '*.coffee' '*.ts' ;\
+  }; f"
 
 [core]
   excludesfile = ~/.gitignore
