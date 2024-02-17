@@ -43,4 +43,41 @@ require('neo-zoom').setup({
 
 require('gitsigns').setup()
 
---- require('treesitter')
+require('nvim-treesitter').setup({
+  highlight = {
+    enable = true,
+  },
+  indent = { enable = true },
+  ensure_installed = {
+    "bash",
+    "comment",
+    "css",
+    "diff",
+    "dot",
+    "git_config",
+    "git_rebase",
+    "gitattributes",
+    "gitcommit",
+    "gitignore",
+    "html",
+    "javascript",
+    "jq",
+    "json",
+    "lua",
+    "markdown",
+    "markdown_inline",
+    "pug",
+    "python",
+    "regex",
+    "ruby",
+    "scss",
+    "sql",
+    "ssh_config",
+    "typescript",
+    "vim",
+    "vue",
+    "xml",
+    "yaml",
+  },
+  auto_install = true,
+})
