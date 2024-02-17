@@ -21,6 +21,7 @@ if has('nvim')
   Plug 'tpope/vim-surround'
   Plug 'nyngwang/NeoZoom.lua'
   Plug 'lewis6991/gitsigns.nvim'
+  Plug 'dense-analysis/ale'
 endif
 
 call plug#end()
