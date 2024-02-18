@@ -22,6 +22,7 @@ if has('nvim')
   Plug 'nyngwang/NeoZoom.lua'
   Plug 'lewis6991/gitsigns.nvim'
   Plug 'dense-analysis/ale'
+  Plug 'neovim/nvim-lspconfig'
 endif
 
 call plug#end()
@@ -66,5 +67,16 @@ nnoremap <leader>ff <cmd>Telescope find_files<cr>
 nnoremap <leader>fg <cmd>Telescope live_grep<cr>
 nnoremap <leader>fb <cmd>Telescope buffers<cr>
 nnoremap <leader>fh <cmd>Telescope help_tags<cr>
+
+let g:ale_linters = {
+  \ 'ruby': ['rubocop'],
+  \ 'javascript': ['eslint'],
+  \ 'vue': ['javascript', 'html', 'stylus'],
+  \ }
+
+let g:ale_fixers = {
+  \ '*': ['remove_trailing_lines', 'trim_whitespace'],
+  \ 'ruby': ['rubocop'],
+  \ }
 
 source ~/.config/nvim/myinit.lua
