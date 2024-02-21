@@ -25,17 +25,13 @@ require('lualine').setup({
 })
 
 require('neo-zoom').setup({
-  popup = { enabled = false },
+  popup = { enabled = true },
   winopts = {
     offset = {
       top = 0,
       left = 0,
-      width = function()
-        return vim.o.columns
-      end,
-      height = function()
-        return vim.o.lines
-      end,
+      width = 300,
+      height = 100,
     },
     border = 'none',
   },
