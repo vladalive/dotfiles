@@ -10,7 +10,6 @@
     ~/.bashrc: 'files/bashrc'
     ~/.gemrc: 'files/gemrc'
     ~/.vimrc.after: 'files/vimrc.local'
-    ~/.gvimrc.local: 'files/gvimrc.local'
     ~/.tmux.conf: 'files/tmux.conf'
     ~/.janus: 'files/janus'
     ~/.default-gems: 'files/default-gems'
