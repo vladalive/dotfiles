@@ -116,6 +116,3 @@ fi
 export PATH=$PATH:$HOME/dev/bin/sh
 export PATH=$PATH:$HOME/local/bin
 export CHROME_BIN=/usr/bin/google-chrome
-
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-export PATH="$PATH:$HOME/.rvm/bin"
