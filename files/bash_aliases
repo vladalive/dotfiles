@@ -8,6 +8,7 @@ export TERM=screen-256color
 alias ls='ls --color=tty'
 alias l='ls -la'
 alias less='less -S'
+alias jqless='jq -C | less'
 alias clip='xclip -sel clip'
 alias dir-here='nautilus .'
 
