@@ -50,5 +50,8 @@ if [ -f '/home/deployer/yandex-cloud/path.bash.inc' ]; then source '/home/deploy
 
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
+# FIXME: deletes the phantom ruby bin that ignores asdf settings
+export PATH=${PATH//:\/home\/deployer\/\.asdf\/installs\/ruby\/3\.2\.2\/bin:}
+
 # gpg
 export GPG_TTY=$(tty)
