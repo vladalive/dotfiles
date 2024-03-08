@@ -210,3 +210,6 @@
   # features = unobtrusive-line-numbers decorations
 [commit]
   gpgsign = true
+[maintenance]
+  repo = /home/deployer/dev/projects/clients/nimbleind/statusgator-core
+  repo = /home/deployer/dev/projects/my/agree/agree-webapp
