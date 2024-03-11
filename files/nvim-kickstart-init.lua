@@ -155,6 +155,8 @@ vim.opt.scrolloff = 5
 
 -- NOTE: My custom options
 
+vim.g.disable_autoformat = true
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -194,6 +196,25 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- [[ My custom bindings ]]
 
 -- [[ My custom functions ]]
+
+vim.api.nvim_create_user_command('FormatDisable', function(args)
+  if args.bang then
+    -- FormatDisable! will disable formatting just for this buffer
+    vim.b.disable_autoformat = true
+  else
+    vim.g.disable_autoformat = true
+  end
+end, {
+  desc = 'Disable autoformat-on-save',
+  bang = true,
+})
+
+vim.api.nvim_create_user_command('FormatEnable', function()
+  vim.b.disable_autoformat = false
+  vim.g.disable_autoformat = false
+end, {
+  desc = 'Re-enable autoformat-on-save',
+})
 
 --- NOTE: https://github.com/Shopify/ruby-lsp/blob/main/EDITORS.md#neovim-lsp
 -- textDocument/diagnostic support until 0.10.0 is released
@@ -677,10 +698,13 @@ require('lazy').setup({
     },
     opts = {
       notify_on_error = false,
-      format_on_save = {
-        timeout_ms = 500,
-        lsp_fallback = true,
-      },
+      format_on_save = function(bufnr)
+        -- Disable with a global or buffer-local variable
+        if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+          return
+        end
+        return { timeout_ms = 500, lsp_fallback = true }
+      end,
       formatters_by_ft = {
         lua = { 'stylua' },
         ruby = { 'rubocop' },
