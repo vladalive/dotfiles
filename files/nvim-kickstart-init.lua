@@ -875,6 +875,7 @@ require('lazy').setup({
         auto_install = true,
         highlight = { enable = true },
         indent = { enable = true },
+        endwise = { enable = true },
       }
 
       -- There are additional nvim-treesitter modules that you can use to interact
@@ -954,6 +955,9 @@ require('lazy').setup({
       }
     end,
   },
+
+  -- Adding ends
+  'RRethy/nvim-treesitter-endwise',
 }, {
   ui = {
     -- If you have a Nerd Font, set icons to an empty table which will use the
