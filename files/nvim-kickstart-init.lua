@@ -153,6 +153,8 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 5
 
+-- NOTE: My custom options
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -658,6 +660,21 @@ require('lazy').setup({
 
   { -- Autoformat
     'stevearc/conform.nvim',
+    event = {
+      'BufWritePre',
+      'BufReadPre',
+      'BufNewFile',
+    },
+    cmd = { 'ConformInfo' },
+    keys = {
+      {
+        '<leader>F',
+        function()
+          require('conform').format { async = true, lsp_fallback = true }
+        end,
+        desc = 'Auto [F]ormat',
+      },
+    },
     opts = {
       notify_on_error = false,
       format_on_save = {
@@ -666,6 +683,7 @@ require('lazy').setup({
       },
       formatters_by_ft = {
         lua = { 'stylua' },
+        ruby = { 'rubocop' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -958,6 +976,25 @@ require('lazy').setup({
 
   -- Adding ends
   'RRethy/nvim-treesitter-endwise',
+
+  -- Split windows separators
+  {
+    'nvim-zh/colorful-winsep.nvim',
+    config = true,
+    event = { 'WinNew' },
+  },
+
+  -- Github copilot
+  {
+    'zbirenbaum/copilot.lua',
+    cmd = 'Copilot',
+    event = 'InsertEnter',
+    config = function()
+      require('copilot').setup {
+        copilot_node_command = vim.fn.expand '$HOME' .. '/.asdf/installs/nodejs/18.10.0/bin/node',
+      }
+    end,
+  },
 }, {
   ui = {
     -- If you have a Nerd Font, set icons to an empty table which will use the
