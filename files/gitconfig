@@ -107,6 +107,11 @@
   grep-js = "!f() { \
     git grep \"$1\" -- '*.js' '*.coffee' '*.ts' ;\
   }; f"
+  cg = "!f() { \
+    TARGET=${1:-master} ;\
+    BRANCH=$(git branch | grep $TARGET | grep -v '*' | awk 'NR==1{print $TARGET}') ;\
+    [ -n "$BRANCH" ] && git checkout $BRANCH || true ;\
+  }; f"
 
 [core]
   excludesfile = ~/.gitignore
