@@ -755,6 +755,11 @@ require('lazy').setup({
       local luasnip = require 'luasnip'
       luasnip.config.setup {}
 
+      local check_backspace = function()
+        local col = vim.fn.col(".") - 1
+        return col == 0 or vim.fn.getline("."):sub(col, col):match("%s")
+      end
+
       cmp.setup {
         snippet = {
           expand = function(args)
@@ -769,14 +774,16 @@ require('lazy').setup({
         -- No, but seriously. Please read `:help ins-completion`, it is really good!
         mapping = cmp.mapping.preset.insert {
           -- Select the [n]ext item
-          ['<C-n>'] = cmp.mapping.select_next_item(),
+          ['<C-j>'] = cmp.mapping.select_next_item(),
           -- Select the [p]revious item
-          ['<C-p>'] = cmp.mapping.select_prev_item(),
+          ['<C-k>'] = cmp.mapping.select_prev_item(),
 
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
+          -- ['<C-y>'] = cmp.mapping.confirm { select = true },
+          ['<CR>'] = cmp.mapping.confirm({ select = true }),
+          ['<C-y>'] = cmp.config.disable,
 
           -- Manually trigger a completion from nvim-cmp.
           --  Generally you don't need this, because nvim-cmp will display
@@ -801,11 +808,44 @@ require('lazy').setup({
               luasnip.jump(-1)
             end
           end, { 'i', 's' }),
+
+          ['<Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_next_item()
+            elseif require('copilot.suggestion').is_visible() then
+              require('copilot.suggestion').accept()
+            elseif luasnip.expandable() then
+              luasnip.expand()
+            elseif luasnip.expand_or_jumpable() then
+              luasnip.expand_or_jump()
+            elseif check_backspace() then
+              fallback()
+            else
+              fallback()
+            end
+          end, {
+              'i',
+              's',
+          }),
+          ['<S-Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            elseif luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
+          end, {
+              'i',
+              's',
+          }),
         },
         sources = {
-          { name = 'nvim_lsp' },
-          { name = 'luasnip' },
-          { name = 'path' },
+          { name = 'copilot', group_index = 2 },
+          { name = 'codeium', group_index = 2 },
+          { name = 'nvim_lsp', group_index = 2 },
+          { name = 'path', group_index = 2 },
+          { name = 'luasnip', group_index = 2 },
         },
       }
     end,
@@ -1008,6 +1048,23 @@ require('lazy').setup({
     event = { 'WinNew' },
   },
 
+  -- Codeium
+  {
+    'Exafunction/codeium.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'hrsh7th/nvim-cmp',
+    },
+    config = function()
+      require('codeium').setup {
+        tools = {
+          -- $ install-release get -t 'language-server-v1.6.7' https://github.com/Exafunction/codeium
+          language_server = vim.fn.expand '$HOME' ..'/bin/codeium'
+        },
+      }
+    end
+  },
+
   -- Github copilot
   {
     'zbirenbaum/copilot.lua',
@@ -1016,8 +1073,18 @@ require('lazy').setup({
     config = function()
       require('copilot').setup {
         copilot_node_command = vim.fn.expand '$HOME' .. '/.asdf/installs/nodejs/18.10.0/bin/node',
+          suggestion = { enabled = false },
+          panel = { enabled = false },
       }
     end,
+  },
+
+  -- Github copilot cmp source
+  {
+    'zbirenbaum/copilot-cmp',
+    config = function ()
+      require('copilot_cmp').setup()
+    end
   },
 
   -- Tree
