@@ -156,6 +156,7 @@ vim.opt.scrolloff = 5
 -- NOTE: My custom options
 
 vim.g.disable_autoformat = true
+vim.wo.wrap = false
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
