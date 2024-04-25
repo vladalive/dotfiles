@@ -90,7 +90,7 @@ P.S. You can delete this when you're done too. It's your config now! :)
 vim.g.mapleader = '\\'
 vim.g.maplocalleader = '\\'
 
-vim.keymap.set('n', ';', ':')
+vim.keymap.set({'n', 'v'}, ';', ':')
 
 -- Set to true if you have a Nerd Font installed
 vim.g.have_nerd_font = false
@@ -843,7 +843,7 @@ require('lazy').setup({
         },
         sources = {
           { name = 'copilot', group_index = 2 },
-          { name = 'codeium', group_index = 2 },
+          -- { name = 'codeium', group_index = 2 },
           { name = 'nvim_lsp', group_index = 2 },
           { name = 'path', group_index = 2 },
           { name = 'luasnip', group_index = 2 },
@@ -1050,21 +1050,21 @@ require('lazy').setup({
   },
 
   -- Codeium
-  {
-    'Exafunction/codeium.nvim',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'hrsh7th/nvim-cmp',
-    },
-    config = function()
-      require('codeium').setup {
-        tools = {
-          -- $ install-release get -t 'language-server-v1.6.7' https://github.com/Exafunction/codeium
-          language_server = vim.fn.expand '$HOME' ..'/bin/codeium'
-        },
-      }
-    end
-  },
+  -- {
+  --   'Exafunction/codeium.nvim',
+  --   dependencies = {
+  --     'nvim-lua/plenary.nvim',
+  --     'hrsh7th/nvim-cmp',
+  --   },
+  --   config = function()
+  --     require('codeium').setup {
+  --       tools = {
+  --         -- $ install-release get -t 'language-server-v1.6.7' https://github.com/Exafunction/codeium
+  --         language_server = vim.fn.expand '$HOME' ..'/bin/codeium'
+  --       },
+  --     }
+  --   end
+  -- },
 
   -- Github copilot
   {
@@ -1114,10 +1114,21 @@ require('lazy').setup({
       'MunifTanjim/nui.nvim',
     },
     config = function()
-      require('neo-tree').setup {}
+      require('neo-tree').setup {
+        filesystem = {
+          filtered_items = {
+            hide_by_name = {
+              'android',
+            },
+          }
+        }
+      }
       vim.keymap.set('n', '<leader>n', '<cmd>Neotree toggle<CR>', { desc = '[N]eo Tree' })
     end,
   },
+
+  -- WakaTime
+  { 'wakatime/vim-wakatime', lazy = false },
 }, {
   ui = {
     -- If you have a Nerd Font, set icons to an empty table which will use the

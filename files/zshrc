@@ -17,6 +17,7 @@ antigen bundle compleat
 antigen bundle sobolevn/wakatime-zsh-plugin
 antigen bundle zsh-users/zsh-syntax-highlighting
 antigen bundle arzzen/calc.plugin.zsh
+antigen bundle git-flow-completion
 antigen theme kphoen
 antigen apply
 

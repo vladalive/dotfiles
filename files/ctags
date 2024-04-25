@@ -6,3 +6,7 @@
 --exclude=node_modules/*
 --exclude=log/*
 --exclude=\*.min.\*
+--exclude=tmp/*
+--exclude=coverage/*
+--exclude=public/assets/*
+--exclude=app/assets/builds/*

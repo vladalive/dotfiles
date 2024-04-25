@@ -135,6 +135,7 @@
 [grep]
   lineNumber = true
   patternType = extended
+	extendedRegexp = true
 
 [diff]
   tool = vimdiff
@@ -196,8 +197,8 @@
   useUnicodeRuler = true
 [interactive]
   # diffFilter = diff-so-fancy --patch
-  # diffFilter = delta --color-only
-  diffFilter = delta --diff-so-fancy
+  diffFilter = delta --color-only
+  # diffFilter = delta --diff-so-fancy
 [delta "decorations"]
   # side-by-side = true
   # line-numbers = true
