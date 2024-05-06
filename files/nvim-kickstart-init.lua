@@ -677,6 +677,9 @@ require('lazy').setup({
           end,
         },
       }
+
+      require("typescript-tools").setup {
+      }
     end,
   },
 
@@ -1129,6 +1132,14 @@ require('lazy').setup({
 
   -- WakaTime
   { 'wakatime/vim-wakatime', lazy = false },
+
+  -- lsp for typescript
+  {
+    "pmizio/typescript-tools.nvim",
+    dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
+    opts = {},
+  },
+
 }, {
   ui = {
     -- If you have a Nerd Font, set icons to an empty table which will use the
