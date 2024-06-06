@@ -655,7 +655,7 @@ require('lazy').setup({
           },
         },
 
-        ruby_ls = {
+        ruby_lsp = {
           on_attach = function(client, buffer)
             setup_diagnostics(client, buffer)
           end,
