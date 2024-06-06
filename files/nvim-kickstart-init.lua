@@ -165,6 +165,19 @@ vim.wo.wrap = false
 vim.opt.hlsearch = true
 vim.keymap.set('n', '//', '<cmd>nohlsearch<CR>', { silent = true })
 
+vim.cmd [[
+  function! RunSubstitutions()
+    execute "'<,'>s/\\s*$//g"
+    execute "'<,'>s/\"/'/g"
+    execute "'<,'>s/:\\([^= ]*\\)\\s*=>\\s*/\\1: /g"
+    execute "'<,'>s/{\\([^ ].*[^ ]\\)}/{ \\1 }/g"
+    execute "'<,'>s/^\\(\\s*\\)+/\\1/g"
+    execute "'<,'>s/\\[/ /g"
+    execute "'<,'>s/\\]/,/g"
+  endfunction
+]]
+vim.api.nvim_set_keymap('v', '<Leader>r', ':<C-u>call RunSubstitutions()<CR>', { noremap = true, silent = true })
+
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
