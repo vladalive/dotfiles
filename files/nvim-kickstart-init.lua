@@ -1153,6 +1153,11 @@ require('lazy').setup({
     opts = {},
   },
 
+  -- requested by aichat generated code
+  {
+    'mg979/vim-visual-multi', lazy = false,
+  },
+
 }, {
   ui = {
     -- If you have a Nerd Font, set icons to an empty table which will use the
