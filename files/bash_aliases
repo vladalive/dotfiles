@@ -235,3 +235,12 @@ function gh-pr-create-statusgator () {
   echo $CMD
   $($CMD)
 }
+
+function grep-gh-run-errors-ruby () {
+  grep -oP "# ./(spec/.*spec.rb:[[:digit:]]+)$"
+}
+
+function gh-failed () {
+  JOB_ID=$1
+  gh run view --log-failed --job=$JOB_ID | grep-gh-run-errors-ruby
+}
