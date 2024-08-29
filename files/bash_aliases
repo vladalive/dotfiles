@@ -78,7 +78,7 @@ function git-branch-upstream () {
 }
 
 function git-branch-remove-merged () {
-  git branch --merged | egrep -v "(^\*|master|main|develop)" | xargs -r git branch -d
+  git branch --merged | egrep -v "(^\*|master|main|develop|deploy)" | xargs -r git branch -d
 }
 
 function dg () {
