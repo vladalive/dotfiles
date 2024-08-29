@@ -25,6 +25,10 @@ DISABLE_AUTO_UPDATE="true"
 
 # User configuration
 
+# github copilot integration
+
+eval "$(gh copilot alias -- zsh)"
+
 # aichat zsh integration
 _aichat_zsh() {
     if [[ -n "$BUFFER" ]]; then
