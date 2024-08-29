@@ -858,8 +858,9 @@ require('lazy').setup({
           }),
         },
         sources = {
+          { name = 'cmp_tabnine', group_index = 2 },
           { name = 'copilot', group_index = 2 },
-          -- { name = 'codeium', group_index = 2 },
+          { name = 'codeium', group_index = 2 },
           { name = 'nvim_lsp', group_index = 2 },
           { name = 'path', group_index = 2 },
           { name = 'luasnip', group_index = 2 },
@@ -1066,21 +1067,23 @@ require('lazy').setup({
   },
 
   -- Codeium
-  -- {
-  --   'Exafunction/codeium.nvim',
-  --   dependencies = {
-  --     'nvim-lua/plenary.nvim',
-  --     'hrsh7th/nvim-cmp',
-  --   },
-  --   config = function()
-  --     require('codeium').setup {
-  --       tools = {
-  --         -- $ install-release get -t 'language-server-v1.6.7' https://github.com/Exafunction/codeium
-  --         language_server = vim.fn.expand '$HOME' ..'/bin/codeium'
-  --       },
-  --     }
-  --   end
-  -- },
+  {
+    'Exafunction/codeium.nvim',
+    enabled = false,
+    event = 'BufEnter',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'hrsh7th/nvim-cmp',
+    },
+    config = function()
+      require('codeium').setup {
+        tools = {
+          -- $ install-release get -t 'language-server-v1.8.25' https://github.com/Exafunction/codeium
+          language_server = vim.fn.expand '$HOME' ..'/bin/codeium'
+        },
+      }
+    end
+  },
 
   -- Github copilot
   {
@@ -1102,6 +1105,30 @@ require('lazy').setup({
     config = function ()
       require('copilot_cmp').setup()
     end
+  },
+
+  -- Tabnine
+  {
+    'codota/tabnine-nvim',
+    build = "./dl_binaries.sh",
+    config = function ()
+      require('tabnine').setup({
+        disable_auto_comment = true,
+        accept_keymap = false,
+        dismiss_keymap = false,
+        --- debounce_ms = 800,
+        suggestion_color = { gui = "#808080", cterm = 244 },
+        exclude_filetypes = { "TelescopePrompt", "NvimTree" },
+        log_file_path = nil,
+      })
+    end
+  },
+
+  --- Tabnine cmp
+  {
+    'tzachar/cmp-tabnine',
+    build = './install.sh',
+    dependencies = 'hrsh7th/nvim-cmp',
   },
 
   -- ChatGPT
