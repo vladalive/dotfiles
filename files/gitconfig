@@ -112,6 +112,11 @@
     BRANCH=$(git branch | grep $TARGET | grep -v '*' | awk 'NR==1{print $TARGET}') ;\
     [ -n "$BRANCH" ] && git checkout $BRANCH || true ;\
   }; f"
+  rcom = "!f() { \
+    eval \"$1\";\
+    git add .;\
+    git commit -m \"[run] $1\";\
+  }; f"
 
 [core]
   excludesfile = ~/.gitignore
