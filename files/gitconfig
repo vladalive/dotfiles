@@ -17,6 +17,14 @@
   c      = checkout
   b      = branch
 
+  env-branch-master     = config --get --default master branches.master
+  env-branch-develop    = config --get --default develop branches.develop
+  env-branch-staging    = config --get --default staging branches.staging
+  env-branch-production = config --get --default production branches.production
+
+  cm = "!git checkout $(git env-branch-master)"
+  cd = "!git checkout $(git env-branch-develop)"
+
   d      = diff
   dw     = diff -b -w
   dc     = diff -b --cached
@@ -25,42 +33,32 @@
   dn     = diff --name-only
 
   # dm     = diff master...
-  dm = "!f() { \
-    BRANCH=${GIT_MAIN_BRANCH:-master} ;\
-    git diff $BRANCH... $@ ;\
-  }; f"
+  dm = "!git diff $(git env-branch-master)..."
+
   # dd     = diff develop...
-  dd = "!f() { \
-    BRANCH=${GIT_DEVELOP_BRANCH:-develop} ;\
-    git diff $BRANCH... $@ ;\
-  }; f"
+  dd = "!git diff $(git env-branch-develop)..."
 
   co     = commit
   com    = commit -m
   cof    = commit -m 'f'
 
   # rebm   = rebase master
-  rebm = "!f() { \
-    BRANCH=${GIT_MAIN_BRANCH:-master} ;\
-    git rebase $BRANCH $@ ;\
-  }; f"
+  rebm = "!git rebase $(git env-branch-master)"
+
   # rebd   = rebase develop
-  rebd = "!f() { \
-    BRANCH=${GIT_DEVELOP_BRANCH:-develop} ;\
-    git rebase $BRANCH $@ ;\
-  }; f"
+  rebd = "!git rebase $(git env-branch-develop)"
+
   rebp   = rebase production
+
   # rebim  = rebase -i master
-  rebim = "!f() { \
-    BRANCH=${GIT_MAIN_BRANCH:-master} ;\
-    git rebase -i $BRANCH $@ ;\
-  }; f"
+  rebim = "!git rebase -i $(git env-branch-master)"
+
   # rebid  = rebase -i develop
-  rebid = "!f() { \
-    BRANCH=${GIT_DEVELOP_BRANCH:-develop} ;\
-    git rebase -i $BRANCH $@ ;\
-  }; f"
-  rebip  = rebase -i production
+  rebid = "!git rebase -i $(git env-branch-develop)"
+
+  # rebip  = rebase -i production
+  rebid = "!git rebase -i $(git env-branch-production)"
+
   rebi   = rebase -i
   rebi1  = rebase -i HEAD~1
   rebi2  = rebase -i HEAD~2
@@ -78,17 +76,16 @@
   wo     = whatchanged -p origin...
 
   lo     = log --oneline
+
   # lom    = log --oneline master..
-  lom = "!f() { \
-    BRANCH=${GIT_MAIN_BRANCH:-master} ;\
-    git log --oneline $BRANCH.. $@ ;\
-  }; f"
+  lom = "!git log --oneline $(git env-branch-master).."
+
   # lod    = log --oneline develop..
-  lod = "!f() { \
-    BRANCH=${GIT_DEVELOP_BRANCH:-develop} ;\
-    git log --oneline $BRANCH.. $@ ;\
-  }; f"
-  lop    = log --oneline production..
+  lod = "!git log --oneline $(git env-branch-develop).."
+
+  # lop    = log --oneline production..
+  lod = "!git log --oneline $(git env-branch-production).."
+
   lm     = log --pretty=format:'%an | %s'
   lmd    = log --author="$(git config user.name)" --since='1 day'
   lmw    = log --author="$(git config user.name)" --since='1 week'
