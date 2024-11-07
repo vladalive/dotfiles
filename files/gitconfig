@@ -84,7 +84,7 @@
   lod = "!git log --oneline $(git env-branch-develop).."
 
   # lop    = log --oneline production..
-  lod = "!git log --oneline $(git env-branch-production).."
+  lop = "!git log --oneline $(git env-branch-production).."
 
   lm     = log --pretty=format:'%an | %s'
   lmd    = log --author="$(git config user.name)" --since='1 day'
