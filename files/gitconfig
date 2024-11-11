@@ -57,7 +57,7 @@
   rebid = "!git rebase -i $(git env-branch-develop)"
 
   # rebip  = rebase -i production
-  rebid = "!git rebase -i $(git env-branch-production)"
+  rebip = "!git rebase -i $(git env-branch-production)"
 
   rebi   = rebase -i
   rebi1  = rebase -i HEAD~1
