@@ -230,6 +230,21 @@ end, {
   desc = 'Re-enable autoformat-on-save',
 })
 
+-- https://github.com/stevearc/conform.nvim/blob/master/doc/recipes.md#format-command
+vim.api.nvim_create_user_command("Format", function(args)
+  local range = nil
+  if args.count ~= -1 then
+    local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
+    range = {
+      start = { args.line1, 0 },
+      ["end"] = { args.line2, end_line:len() },
+    }
+  end
+  require("conform").format({ async = true, lsp_format = "fallback", range = range })
+end, { range = true })
+
+vim.keymap.set({'n', 'v'}, '<Leader>F', ':Format<CR>', { noremap = true, silent = true })
+
 --- NOTE: https://github.com/Shopify/ruby-lsp/blob/main/EDITORS.md#neovim-lsp
 -- textDocument/diagnostic support until 0.10.0 is released
 _timers = {}
@@ -704,15 +719,6 @@ require('lazy').setup({
       'BufNewFile',
     },
     cmd = { 'ConformInfo' },
-    keys = {
-      {
-        '<leader>F',
-        function()
-          require('conform').format { async = true, lsp_fallback = true }
-        end,
-        desc = 'Auto [F]ormat',
-      },
-    },
     opts = {
       notify_on_error = false,
       format_on_save = function(bufnr)
