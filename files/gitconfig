@@ -102,6 +102,10 @@
   grepb  = grep -B 5
   grepc  = grep -C 5
 
+  assume-unchanged-files = "!git ls-files -v | grep '^h' | sed 's/^h //'"
+  assume-unchanged-set = update-index --assume-unchanged
+  assume-unchanged-unset = update-index --no-assume-unchanged
+
   create-pull-request = !sh -c 'stash pull-request $0 $@'
   up = pull --rebase --autostash
 
