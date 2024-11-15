@@ -1188,6 +1188,18 @@ require('lazy').setup({
     'mg979/vim-visual-multi', lazy = false,
   },
 
+  -- Gist
+  {
+    "Rawnly/gist.nvim",
+    cmd = { "GistCreate", "GistCreateFromFile", "GistsList" },
+    config = true
+  },
+  {
+    "samjwill/nvim-unception",
+    lazy = false,
+    init = function() vim.g.unception_block_while_host_edits = true end
+  },
+
 }, {
   ui = {
     -- If you have a Nerd Font, set icons to an empty table which will use the
