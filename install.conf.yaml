@@ -18,6 +18,7 @@
     ~/.ctags.d/default.ctags: 'files/ctags'
     ~/.rubocop.yml: 'files/rubocop.yml'
     ~/.config/nvim/init.vim: 'files/nvim-kickstart-init.lua'
+    ~/.config/nvim/lua/custom/my: 'files/nvim_custom_plugins'
 
 - shell:
   - [git submodule update --init --recursive, Installing submodules]
