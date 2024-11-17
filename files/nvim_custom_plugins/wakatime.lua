@@ -1,2 +1,5 @@
-  -- WakaTime
-  return { 'wakatime/vim-wakatime', lazy = false }
+-- WakaTime
+return {
+  'wakatime/vim-wakatime',
+  lazy = false,
+}

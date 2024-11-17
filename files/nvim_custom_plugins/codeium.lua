@@ -14,5 +14,5 @@ return {
         language_server = vim.fn.expand '$HOME' ..'/bin/codeium'
       },
     }
-  end
+  end,
 }

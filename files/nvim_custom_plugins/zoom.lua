@@ -5,7 +5,7 @@ return {
   config = function()
     vim.keymap.set('n', '<leader><leader>', function()
       vim.cmd 'NeoZoomToggle'
-    end, { silent = true, nowait = true })
+    end, { silent = true, nowait = true, })
     require('neo-zoom').setup {
       popup = { enabled = true },
       winopts = {
