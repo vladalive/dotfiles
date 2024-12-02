@@ -73,14 +73,6 @@ function git-log-my () {
   for k in `git branch|perl -pe 's/^..//'`;do echo -e `git show --since="1 $1 ago" --author="$(git config user.name)" --pretty=format:"%Cgreen%ci %Cblue%cr%Creset" $k|head -n 1`\\t$k;done|sort -r|grep :
 }
 
-function git-branch-upstream () {
-  git branch --show-current | xargs -r -I{} sh -c 'git branch -u origin/$1' -- {}
-}
-
-function git-branch-remove-merged () {
-  git branch --merged | egrep -v "(^\*|master|main|develop|deploy)" | xargs -r git branch -d
-}
-
 function dg () {
   grep -rl --exclude-dir tmp --exclude *.log "$@" *;
 }

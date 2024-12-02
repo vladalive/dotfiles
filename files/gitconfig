@@ -151,6 +151,13 @@
     git add .;\
     git commit -m \"[run] $1\";\
   }; f"
+  branch-upstream = "!f() { \
+    git branch --show-current | xargs -r -I{} sh -c 'git branch -u origin/$1' -- {} ;\
+  }; f"
+  branch-remove-merged = "!f() { \
+    IGNORED_BRANCHES='master|main|develop|deploy|production|staging|qa'; \
+    git branch --merged | egrep -v \"(^*|$IGNORED_BRANCHES)\" | xargs -r git branch -d ;\
+  }; f"
 
 [core]
   excludesfile = ~/.gitignore
