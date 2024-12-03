@@ -158,6 +158,18 @@
     IGNORED_BRANCHES='master|main|develop|deploy|production|staging|qa'; \
     git branch --merged | egrep -v \"(^*|$IGNORED_BRANCHES)\" | xargs -r git branch -d ;\
   }; f"
+  branch-remove-merged-remote = "!f() { \
+    REMOTE=\"${1:-origin}\" ;\
+    IGNORED_BRANCHES='master|main|develop|deploy|production|staging|qa' ;\
+    git fetch \"$REMOTE\" ;\
+    MERGED_BRANCHES=$(git branch -r --merged | grep \"$REMOTE/\" | sed \"s# *$REMOTE/##\" | grep -v -E \"($IGNORED_BRANCHES)\") ;\
+    if [ -n \"$MERGED_BRANCHES\" ]; then \
+      DELETE_CMD=$(echo \"$MERGED_BRANCHES\" | sed \"s/^/:/\" | tr '\n' ' ') ;\
+      git push \"$REMOTE\" $DELETE_CMD ;\
+    else \
+      echo \"No merged branches to delete.\" ;\
+    fi ;\
+  }; f"
 
 [core]
   excludesfile = ~/.gitignore
