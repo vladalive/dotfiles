@@ -27,6 +27,7 @@ alias test-bandwith="wget --output-document=/dev/null http://speedtest.wdc01.sof
 
 alias tail-log="tail -f log/development.log"
 alias mosh-kill="pgrep mosh-server | grep -v $(ps -o ppid --no-headers $$) | xargs -r kill"
+alias gpg-cache="gpg --yes --sign --detach-sign --armor -u $(git config user.signingkey) ~/tmp/gpg.txt"
 
 dg() { grep -rl --exclude-dir tmp --exclude "*.log" "$@" *; }
 
