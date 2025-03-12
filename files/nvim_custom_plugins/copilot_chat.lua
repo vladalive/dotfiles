@@ -1,6 +1,7 @@
---- Copilot Chat
+-- Copilot Chat
 return {
   'CopilotC-Nvim/CopilotChat.nvim',
+  branch = 'main',
   event = 'VeryLazy',
   dependencies = {
     { 'zbirenbaum/copilot.lua' }, -- or github/copilot.vim
