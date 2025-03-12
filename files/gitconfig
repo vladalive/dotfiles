@@ -156,7 +156,7 @@
   }; f"
   branch-remove-merged = "!f() { \
     IGNORED_BRANCHES='master|main|develop|deploy|production|staging|qa'; \
-    git branch --merged | egrep -v \"(^*|$IGNORED_BRANCHES)\" | xargs -r git branch -d ;\
+    git branch --merged | grep -Ev \"(^\\*|$IGNORED_BRANCHES)\" | xargs -r git branch -d ;\
   }; f"
   branch-remove-merged-remote = "!f() { \
     REMOTE=\"${1:-origin}\" ;\
