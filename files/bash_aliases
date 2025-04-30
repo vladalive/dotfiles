@@ -221,6 +221,11 @@ function git-rebase-all () {
   git checkout $BASE
 }
 
+function gh-run-watch-current () {
+  ID=$(gh run list --limit 1 --json databaseId --jq '.[0].databaseId')
+  gh run watch $ID
+}
+
 function gh-pr-create-statusgator () {
   URL=$1
   ISSUE_NUMBER=$(echo $URL | grep -o '[0-9]\+' | tail -1)
