@@ -60,7 +60,7 @@ nmap <C-l> <C-w>l
 nmap Y Vy
 
 map <Leader>n :NvimTreeToggle<CR>
-nmap <Leader>a :A<CR>
+nmap <Leader>a<space> :A<CR>
 nmap <Leader><Leader> :NeoZoomToggle<CR>
 
 nnoremap <leader>ff <cmd>Telescope find_files<cr>

@@ -2,7 +2,7 @@
 return {
   'tpope/vim-projectionist',
   config = function()
-    vim.keymap.set('n', '<leader>a', ':A<CR>', { silent = true, desc = 'Go to [A]lternate file' })
+    vim.keymap.set('n', '<leader>a<space>', ':A<CR>', { silent = true, desc = 'Go to [A]lternate file' })
     vim.g.projectionist_heuristics = {
       ['*'] = {
         ['app/*.rb'] = {
