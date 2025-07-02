@@ -86,3 +86,4 @@ export INFOPATH="/home/linuxbrew/.linuxbrew/share/info:${INFOPATH:-}";
 
 # gpg
 export GPG_TTY=$(tty)
+eval "$(gh copilot alias -- zsh)"
