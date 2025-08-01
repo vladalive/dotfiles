@@ -29,3 +29,4 @@ tags.temp
 .env.test.local
 .rubocop.yml
 .rubocop.local.yml
+.claude
