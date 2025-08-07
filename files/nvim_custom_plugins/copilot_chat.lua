@@ -4,7 +4,7 @@ return {
   build = "make tiktoken",
   dependencies = {
     { 'zbirenbaum/copilot.lua' }, -- or github/copilot.vim
-    { 'nvim-lua/plenary.nvim' }, -- for curl, log wrapper
+    { "nvim-lua/plenary.nvim", branch = "master" }, -- for curl, log and async functions
   },
   opts = {
     -- model = 'gpt-4.1',
