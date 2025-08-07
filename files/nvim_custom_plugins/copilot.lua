@@ -7,7 +7,7 @@ return {
     require('copilot').setup {
       copilot_node_command = vim.fn.expand '$HOME' .. '/.asdf/installs/nodejs/20.18.1/bin/node',
       suggestion = {
-        enabled = true,
+        enabled = false,
         auto_trigger = false,
       },
       panel = {
@@ -15,6 +15,8 @@ return {
       },
       filetypes = {
         ['*'] = true,
+        ruby = true,
+        javascript = true,
       },
     }
   end,
