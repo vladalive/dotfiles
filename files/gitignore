@@ -30,3 +30,5 @@ tags.temp
 .rubocop.yml
 .rubocop.local.yml
 .claude
+.aider*
+CRUSH.md
