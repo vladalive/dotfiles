@@ -15,8 +15,8 @@ return {
     },
   },
   build = "make",
-  opts = {
-  },
+  -- opts = {
+  -- },
   config = function()
     require('avante').setup {
       -- debug = true,
@@ -26,9 +26,14 @@ return {
         auto_suggestions = true,
         auto_apply_diff_after_generation = true,
       },
+      -- provider = 'ollama',
       provider = "copilot",
       -- provider = "openrouter",
       providers = {
+        ollama = {
+          endpoint = 'http://localhost:11435',
+          model = 'gemma3:4b',
+        },
         copilot = {
           -- model = 'claude-sonnet-4',
           -- model = 'gpt-4',
