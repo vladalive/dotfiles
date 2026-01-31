@@ -32,3 +32,8 @@ tags.temp
 .claude
 .aider*
 CRUSH.md
+AGENTS.md
+CLAUDE.md
+
+docs/creating-checkers.md
+.claude/*.local.*
