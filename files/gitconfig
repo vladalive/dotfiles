@@ -37,6 +37,7 @@
 
   # dd     = diff develop...
   dd = "!git diff $(git env-branch-develop)..."
+  ddst = "!git diff --stat $(git env-branch-develop)..."
 
   co     = commit
   com    = commit -m
