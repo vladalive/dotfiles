@@ -1,5 +1,6 @@
 .ruby-gemset
 .tool-versions
+.nvmrc
 .svn
 .bundle
 .rake_tasks~
@@ -31,9 +32,18 @@ tags.temp
 .rubocop.local.yml
 .claude
 .aider*
+.agents
+.gemini
 CRUSH.md
 AGENTS.md
 CLAUDE.md
+GEMINI.md
 
 docs/creating-checkers.md
 .claude/*.local.*
+.playwright-mcp
+.playwright-cli
+.claude-flow/
+.mcp.json
+.swarm/
+docs/plans
