@@ -27,9 +27,56 @@ alias test-bandwith="wget --output-document=/dev/null http://speedtest.wdc01.sof
 
 alias tail-log="tail -f log/development.log"
 alias mosh-kill="pgrep mosh-server | grep -v $(ps -o ppid --no-headers $$) | xargs -r kill"
-alias gpg-cache="gpg --yes --sign --detach-sign --armor -u $(git config user.signingkey) ~/tmp/gpg.txt"
-alias gpg-reset="gpgconf --kill gpg-agent"
 alias tmux-envs-load='source ~/.bash_env && while IFS='"'"'='"'"' read -r name value; do value="${value#\'"'"'}"; value="${value%\'"'"'}"; tmux set-environment -g "$name" "$value"; done < <(envs dump)'
+
+gpg-cache() {
+  if ! command -v gpg >/dev/null 2>&1; then
+    echo "gpg-cache: gpg is not installed" >&2
+    return 1
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    echo "gpg-cache: git is not installed" >&2
+    return 1
+  fi
+
+  if GPG_TTY_VALUE=$(tty 2>/dev/null); then
+    export GPG_TTY="$GPG_TTY_VALUE"
+  fi
+
+  SIGNING_KEY=$(git config --global --get user.signingkey)
+  if [ -z "$SIGNING_KEY" ]; then
+    echo "gpg-cache: git user.signingkey is not configured" >&2
+    return 1
+  fi
+
+  mkdir -p "$HOME/tmp" || return 1
+  if [ ! -f "$HOME/tmp/gpg.txt" ]; then
+    printf 'gpg cache warmup\n' > "$HOME/tmp/gpg.txt" || return 1
+  fi
+
+  gpg --yes --armor --detach-sign --local-user "$SIGNING_KEY" "$HOME/tmp/gpg.txt"
+}
+
+gpg-reset() {
+  if ! command -v gpgconf >/dev/null 2>&1; then
+    echo "gpg-reset: gpgconf is not installed" >&2
+    return 1
+  fi
+
+  if ! command -v gpg-connect-agent >/dev/null 2>&1; then
+    echo "gpg-reset: gpg-connect-agent is not installed" >&2
+    return 1
+  fi
+
+  if GPG_TTY_VALUE=$(tty 2>/dev/null); then
+    export GPG_TTY="$GPG_TTY_VALUE"
+  fi
+
+  gpgconf --kill gpg-agent || return 1
+  gpgconf --launch gpg-agent || return 1
+  gpg-connect-agent updatestartuptty /bye >/dev/null
+}
 
 dg() { grep -rl --exclude-dir tmp --exclude "*.log" "$@" *; }
 
@@ -254,4 +301,4 @@ function gh-failed () {
   gh run view --log-failed --job=$JOB_ID | grep-gh-run-errors-ruby
 }
 
-unalias '='
+alias '=' >/dev/null 2>&1 && unalias '='
