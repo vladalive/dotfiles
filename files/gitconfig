@@ -42,6 +42,7 @@
   co     = commit
   com    = commit -m
   cof    = commit -m 'f'
+  cofam  = commit --amend --no-edit
 
   # rebm   = rebase master
   rebm = "!git rebase $(git env-branch-master)"
@@ -66,6 +67,13 @@
   rebi3  = rebase -i HEAD~3
   rebi4  = rebase -i HEAD~4
   rebi5  = rebase -i HEAD~5
+
+  show0  = show HEAD~0
+  show1  = show HEAD~1
+  show2  = show HEAD~2
+  show3  = show HEAD~3
+  show4  = show HEAD~4
+  show5  = show HEAD~5
 
   # summary of what you're going to push
   ps     = log --oneline origin...
