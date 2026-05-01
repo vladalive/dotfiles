@@ -15,6 +15,7 @@
 [alias]  # shortcuts
   s      = status
   c      = checkout
+  cw     = "!f() { if [ \"$#\" -eq 1 ]; then branch=\"${1#refs/heads/}\"; worktree=$(git worktree list --porcelain | awk -v branch=\"refs/heads/$branch\" '/^worktree / { path = substr($0, 10) } /^branch / && $2 == branch { print path; exit }'); if [ -n \"$worktree\" ]; then printf '%s\\n' \"$worktree\"; return 0; fi; fi; git checkout \"$@\"; }; f"
   b      = branch
 
   env-branch-master     = config --get --default master branches.master
