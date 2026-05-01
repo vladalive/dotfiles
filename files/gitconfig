@@ -24,6 +24,7 @@
 
   cm = "!git checkout $(git env-branch-master)"
   cd = "!git checkout $(git env-branch-develop)"
+  gpg-signingkey-local = "!f() { key=$(gpg --list-secret-keys --keyid-format=long | awk '/^sec/ { sub(/^.*\\//, \"\", $2); print $2; exit }'); if [ -z \"$key\" ]; then echo \"No GPG secret key found\" >&2; return 1; fi; git config --file ~/.gitconfig.local user.signingkey \"$key\"; echo \"Configured ~/.gitconfig.local user.signingkey=$key\"; }; f"
 
   d      = diff
   dw     = diff -b -w
