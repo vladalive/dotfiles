@@ -245,6 +245,7 @@
 [merge]
   tool = vimdiff
   conflictstyle = diff3
+  ff = only
 
 [mergetool]
   prompt = false
@@ -270,9 +271,10 @@
 	trustExitCode = true
 [pull]
   rebase = true
+  ff = only
 [gitflow "branch"]
-	master = develop
-	develop = master
+  master = master
+  develop = develop
 [gitflow "prefix"]
 	feature = feature/
 	bugfix = bugfix/
@@ -316,3 +318,5 @@
   # features = unobtrusive-line-numbers decorations
 [commit]
   gpgsign = true
+[init]
+  defaultBranch = master
