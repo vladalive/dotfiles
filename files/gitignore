@@ -43,6 +43,7 @@ docs/creating-checkers.md
 .claude/*.local.*
 .playwright-mcp
 .playwright-cli
+.playwright/
 .claude-flow/
 .mcp.json
 .swarm/
