@@ -82,3 +82,10 @@ export INFOPATH="/home/linuxbrew/.linuxbrew/share/info:${INFOPATH:-}";
 
 # gpg
 export GPG_TTY=$(tty)
+
+# Local machine overrides
+# Keep host-specific aliases and PATH changes out of this shared repo.
+if [ -z "${DOTFILES_SHELL_LOCAL_SOURCED:-}" ] && [ -s "$HOME/.shell.local" ]; then
+  export DOTFILES_SHELL_LOCAL_SOURCED=1
+  source "$HOME/.shell.local"
+fi
