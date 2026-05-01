@@ -10,6 +10,7 @@ return {
     "ravitemer/mcphub.nvim",
     {
       "MeanderingProgrammer/render-markdown.nvim",
+      enabled = false,
       opts = { file_types = { "markdown", "Avante" } },
       ft = { "markdown", "Avante" },
     },
