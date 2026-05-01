@@ -1,7 +1,6 @@
 [user]
   name = Vlad Alive
   email = vladalive@gmail.com
-  signingkey = 800B483BD2EB8461
 
 [color]
   diff = auto
@@ -320,3 +319,6 @@
   gpgsign = true
 [init]
   defaultBranch = master
+
+[include]
+  path = ~/.gitconfig.local
