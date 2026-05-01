@@ -47,3 +47,6 @@ docs/creating-checkers.md
 .mcp.json
 .swarm/
 docs/plans
+docs/superpowers/
+.codegraph
+.worktrees/
