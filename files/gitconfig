@@ -166,7 +166,39 @@
   }; f"
   branch-remove-merged = "!f() { \
     IGNORED_BRANCHES='master|main|develop|deploy|production|staging|qa'; \
-    git branch --merged | grep -Ev \"(^\\*|$IGNORED_BRANCHES)\" | xargs -r git branch -d ;\
+    DRY_RUN=0 ;\
+    if [ \"$1\" = '--dry-run' ]; then \
+      DRY_RUN=1 ;\
+      shift ;\
+    fi ;\
+    CURRENT_BRANCH=$(git branch --show-current) ;\
+    FOUND_BRANCHES=0 ;\
+    for BRANCH in $(git for-each-ref --format='%(refname:short)' refs/heads --merged); do \
+      if echo \"$BRANCH\" | grep -Eq \"^($IGNORED_BRANCHES)$\" || [ \"$BRANCH\" = \"$CURRENT_BRANCH\" ]; then \
+        continue ;\
+      fi ;\
+      git merge-base --is-ancestor \"$BRANCH\" HEAD || continue ;\
+      FOUND_BRANCHES=1 ;\
+      echo \"branch: $BRANCH\" ;\
+      WORKTREES=$(git worktree list --porcelain | awk -v branch=\"refs/heads/$BRANCH\" 'BEGIN { path = \"\" } /^worktree / { path = substr($0, 10) } /^branch / { if ($2 == branch) print path }') ;\
+      if [ -n \"$WORKTREES\" ]; then \
+        echo \"$WORKTREES\" | while read -r WORKTREE; do \
+          [ -z \"$WORKTREE\" ] && continue ;\
+          echo \"worktree: $WORKTREE\" ;\
+          if [ \"$DRY_RUN\" -eq 1 ]; then \
+            echo \"dry-run: git worktree remove '$WORKTREE'\" ;\
+          else \
+            git worktree remove \"$WORKTREE\" || exit 1 ;\
+          fi ;\
+        done || exit 1 ;\
+      fi ;\
+      if [ \"$DRY_RUN\" -eq 1 ]; then \
+        echo \"dry-run: git branch -D '$BRANCH'\" ;\
+      else \
+        git branch -D \"$BRANCH\" || exit 1 ;\
+      fi ;\
+    done ;\
+    [ \"$FOUND_BRANCHES\" -eq 1 ] || echo 'No merged branches to remove.' ;\
   }; f"
   branch-remove-merged-remote = "!f() { \
     REMOTE=\"${1:-origin}\" ;\
