@@ -44,7 +44,7 @@ gpg-cache() {
     export GPG_TTY="$GPG_TTY_VALUE"
   fi
 
-  SIGNING_KEY=$(git config --global --get user.signingkey)
+  SIGNING_KEY=$(git config --get user.signingkey)
   if [ -z "$SIGNING_KEY" ]; then
     echo "gpg-cache: git user.signingkey is not configured" >&2
     return 1
@@ -76,6 +76,10 @@ gpg-reset() {
   gpgconf --kill gpg-agent || return 1
   gpgconf --launch gpg-agent || return 1
   gpg-connect-agent updatestartuptty /bye >/dev/null
+}
+
+gpg-resolve() {
+  gpg-reset; gpg-cache
 }
 
 dg() { grep -rl --exclude-dir tmp --exclude "*.log" "$@" *; }
