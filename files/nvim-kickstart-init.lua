@@ -158,6 +158,11 @@ vim.opt.scrolloff = 5
 vim.g.disable_autoformat = true
 vim.wo.wrap = false
 
+local is_mosh = vim.env.MOSH_CONNECTION ~= nil and vim.env.MOSH_CONNECTION ~= ''
+if is_mosh then
+  vim.opt.termguicolors = false
+end
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -691,7 +696,12 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      if is_mosh then
+        vim.opt.background = 'dark'
+        vim.cmd.colorscheme 'habamax'
+      else
+        vim.cmd.colorscheme 'tokyonight-night'
+      end
 
       -- You can configure highlights by doing something like
       vim.cmd.hi 'Comment gui=none'
