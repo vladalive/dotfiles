@@ -329,10 +329,6 @@ require('lazy').setup({
 
   -- NOTE: My custom plugins
 
-  -- Adding ends
-  -- nvim-treesitter-endwise still depends on the old nvim-treesitter module API.
-  { 'RRethy/nvim-treesitter-endwise', enabled = false },
-
   -- Split windows separators
   {
     'nvim-zh/colorful-winsep.nvim',
