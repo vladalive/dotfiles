@@ -12,7 +12,7 @@ return {
       window = {
         mappings = {
           ['P'] = {
-            'toggle_preview',
+            'preview',
             config = {
               use_float = false,
               use_snacks_image = true,
