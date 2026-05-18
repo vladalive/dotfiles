@@ -8,12 +8,6 @@ return {
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
     "ravitemer/mcphub.nvim",
-    {
-      "MeanderingProgrammer/render-markdown.nvim",
-      enabled = false,
-      opts = { file_types = { "markdown", "Avante" } },
-      ft = { "markdown", "Avante" },
-    },
   },
   build = "make",
   -- opts = {
