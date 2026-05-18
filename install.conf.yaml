@@ -17,7 +17,7 @@
     ~/.ctags: 'files/ctags'
     ~/.ctags.d/default.ctags: 'files/ctags'
     ~/.rubocop.yml: 'files/rubocop.yml'
-    ~/.config/nvim/init.vim: 'files/nvim-kickstart-init.lua'
+    ~/.config/nvim/init.lua: 'files/nvim-kickstart-init.lua'
     ~/.config/nvim/lua/custom/my: 'files/nvim_custom_plugins'
     ~/.config/mise/config.toml: 'files/mise.toml'
 
