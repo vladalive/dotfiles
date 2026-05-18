@@ -329,13 +329,6 @@ require('lazy').setup({
 
   -- NOTE: My custom plugins
 
-  -- Split windows separators
-  {
-    'nvim-zh/colorful-winsep.nvim',
-    config = true,
-    event = { 'WinNew' },
-  },
-
   -- requested by aichat generated code
   {
     'mg979/vim-visual-multi', lazy = false,
