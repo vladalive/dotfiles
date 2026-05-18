@@ -329,11 +329,6 @@ require('lazy').setup({
 
   -- NOTE: My custom plugins
 
-  -- requested by aichat generated code
-  {
-    'mg979/vim-visual-multi', lazy = false,
-  },
-
   {
     "samjwill/nvim-unception",
     lazy = false,
