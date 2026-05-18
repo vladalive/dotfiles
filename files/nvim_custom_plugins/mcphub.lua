@@ -11,7 +11,7 @@ return {
   config = function()
     require("mcphub").setup({
       use_bundled_binary = true,
-      auto_approve = true,
+      auto_approve = false,
       auto_toggle_mcp_servers = true,
       global_env = {
         "DEFAULT_MINIMUM_TOKENS",
