@@ -323,3 +323,5 @@
 
 [include]
   path = ~/.gitconfig.local
+[safe]
+  directory = /workspace
