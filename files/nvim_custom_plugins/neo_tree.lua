@@ -30,7 +30,7 @@ return {
       end
 
       state.config = preview_config
-      state.commands.preview(state)
+      state.commands.toggle_preview(state)
     end
 
     require('neo-tree').setup {
