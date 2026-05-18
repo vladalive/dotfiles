@@ -635,8 +635,6 @@ require('lazy').setup({
         },
       }
 
-      require("typescript-tools").setup {
-      }
     end,
   },
 
