@@ -1,4 +1,4 @@
-local config_file = vim.loop.fs_realpath(debug.getinfo(1, 'S').source:sub(2)) or debug.getinfo(1, 'S').source:sub(2)
+local config_file = vim.uv.fs_realpath(debug.getinfo(1, 'S').source:sub(2)) or debug.getinfo(1, 'S').source:sub(2)
 local config_dir = vim.fn.fnamemodify(config_file, ':h')
 
 local function load_core(name)
@@ -11,7 +11,7 @@ load_core 'keymaps'
 load_core 'autocmds'
 
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
   vim.fn.system { 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath }
 end ---@diagnostic disable-next-line: undefined-field
