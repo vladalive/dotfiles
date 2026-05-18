@@ -755,8 +755,14 @@ require('lazy').setup({
         },
         -- Autoinstall languages that are not installed
         auto_install = true,
-        highlight = { enable = true },
-        indent = { enable = true },
+        highlight = {
+          enable = true,
+          disable = vim.fn.has 'nvim-0.12' == 1 and { 'markdown', 'markdown_inline' } or {},
+        },
+        indent = {
+          enable = true,
+          disable = vim.fn.has 'nvim-0.12' == 1 and { 'markdown', 'markdown_inline' } or {},
+        },
         endwise = { enable = true },
       }
 
