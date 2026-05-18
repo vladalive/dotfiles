@@ -97,7 +97,7 @@ return {
     end
 
     vim.api.nvim_create_autocmd('FileType', {
-      group = vim.api.nvim_create_augroup('kickstart-treesitter', { clear = true }),
+      group = vim.api.nvim_create_augroup('dotfiles-treesitter', { clear = true }),
       pattern = treesitter_filetypes,
       callback = function(args)
         start_treesitter(args.buf)
@@ -105,7 +105,7 @@ return {
     })
 
     vim.api.nvim_create_autocmd('BufEnter', {
-      group = vim.api.nvim_create_augroup('kickstart-treesitter-buffer-enter', { clear = true }),
+      group = vim.api.nvim_create_augroup('dotfiles-treesitter-buffer-enter', { clear = true }),
       callback = function(args)
         start_treesitter(args.buf)
       end,
