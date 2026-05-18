@@ -38,7 +38,7 @@ return {
         copilot = {
           -- model = 'claude-sonnet-4',
           -- model = 'gpt-4',
-          model = 'gpt-4.1',
+          model = 'gpt-5-mini',
           -- model = 'gpt-4-0125-preview',
           extra_request_body = {
             -- max_tokens = 4096,
