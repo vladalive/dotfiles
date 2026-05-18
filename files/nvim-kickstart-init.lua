@@ -713,65 +713,91 @@ require('lazy').setup({
 
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
-    build = ':TSUpdate',
-    config = function()
-      -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
+    branch = 'main',
+    lazy = false,
+    build = function()
+      local treesitter_languages = {
+        'bash',
+        'c',
+        'comment',
+        'css',
+        'diff',
+        'dot',
+        'git_config',
+        'git_rebase',
+        'gitattributes',
+        'gitcommit',
+        'gitignore',
+        'html',
+        'javascript',
+        'jq',
+        'json',
+        'lua',
+        'markdown',
+        'markdown_inline',
+        'pug',
+        'python',
+        'regex',
+        'ruby',
+        'scss',
+        'sql',
+        'ssh_config',
+        'typescript',
+        'vim',
+        'vimdoc',
+        'vue',
+        'xml',
+        'yaml',
+      }
 
-      ---@diagnostic disable-next-line: missing-fields
-      require('nvim-treesitter.configs').setup {
-        ensure_installed = {
-          'vim',
-          'vimdoc',
+      require('nvim-treesitter').install(treesitter_languages, { max_jobs = 1, summary = true }):wait(300000)
+    end,
+    config = function()
+      require('nvim-treesitter').setup {
+        install_dir = vim.fn.stdpath 'data' .. '/site',
+      }
+
+      vim.api.nvim_create_autocmd('FileType', {
+        group = vim.api.nvim_create_augroup('kickstart-treesitter', { clear = true }),
+        pattern = {
           'bash',
           'c',
-          'comment',
           'css',
           'diff',
           'dot',
-          'git_config',
-          'git_rebase',
-          'gitattributes',
           'gitcommit',
+          'gitconfig',
           'gitignore',
+          'gitrebase',
+          'gitattributes',
+          'help',
           'html',
           'javascript',
           'jq',
           'json',
           'lua',
           'markdown',
-          'markdown_inline',
           'pug',
           'python',
           'regex',
           'ruby',
           'scss',
+          'sh',
           'sql',
-          'ssh_config',
+          'sshconfig',
           'typescript',
           'vim',
           'vue',
           'xml',
           'yaml',
+          'zsh',
         },
-        -- Autoinstall languages that are not installed
-        auto_install = true,
-        highlight = {
-          enable = true,
-          disable = vim.fn.has 'nvim-0.12' == 1 and { 'markdown', 'markdown_inline' } or {},
-        },
-        indent = {
-          enable = true,
-          disable = vim.fn.has 'nvim-0.12' == 1 and { 'markdown', 'markdown_inline' } or {},
-        },
-        endwise = { enable = true },
-      }
-
-      -- There are additional nvim-treesitter modules that you can use to interact
-      -- with nvim-treesitter. You should go explore a few and see what interests you:
-      --
-      --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
-      --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
-      --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+        callback = function(args)
+          if pcall(vim.treesitter.start, args.buf) then
+            vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          end
+        end,
+      })
     end,
   },
 
@@ -798,7 +824,8 @@ require('lazy').setup({
   -- NOTE: My custom plugins
 
   -- Adding ends
-  'RRethy/nvim-treesitter-endwise',
+  -- nvim-treesitter-endwise still depends on the old nvim-treesitter module API.
+  { 'RRethy/nvim-treesitter-endwise', enabled = false },
 
   -- Split windows separators
   {
