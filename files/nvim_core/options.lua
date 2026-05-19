@@ -25,6 +25,17 @@ vim.opt.hlsearch = true
 vim.g.disable_autoformat = true
 vim.wo.wrap = false
 
+vim.diagnostic.config {
+  severity_sort = true,
+  underline = true,
+  signs = true,
+  virtual_text = false,
+  float = {
+    border = 'rounded',
+    source = true,
+  },
+}
+
 local has_true_color = (vim.env.COLORTERM == 'truecolor' or vim.env.COLORTERM == '24bit')
 local is_legacy_term = vim.env.TERM == 'screen-256color' or vim.env.TERM == 'xterm-256color' and vim.env.COLORTERM == nil
 if (not has_true_color) or is_legacy_term then
