@@ -1,5 +1,4 @@
 std = "lua51+nvim"
 
 [lints]
-global_usage = "allow"
 mixed_table = "allow"
