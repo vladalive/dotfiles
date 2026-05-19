@@ -2,19 +2,19 @@
 -- Provides MCP (Model Context Protocol) server integration for Neovim
 
 return {
-  "ravitemer/mcphub.nvim",
+  'ravitemer/mcphub.nvim',
   dependencies = {
-    "nvim-lua/plenary.nvim",
+    'nvim-lua/plenary.nvim',
   },
-  event = "VeryLazy",
-  build = "bundled_build.lua",
+  event = 'VeryLazy',
+  build = 'bundled_build.lua',
   config = function()
-    require("mcphub").setup({
+    require('mcphub').setup {
       use_bundled_binary = true,
       auto_approve = false,
       auto_toggle_mcp_servers = true,
       global_env = {
-        "DEFAULT_MINIMUM_TOKENS",
+        'DEFAULT_MINIMUM_TOKENS',
       },
       extensions = {
         avante = {
@@ -28,6 +28,6 @@ return {
           add_mcp_prefix = false,
         },
       },
-    })
-  end
+    }
+  end,
 }

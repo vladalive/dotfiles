@@ -15,7 +15,7 @@ return {
     }
 
     local function preview(state)
-      local utils = require('neo-tree.utils')
+      local utils = require 'neo-tree.utils'
       local _, is_neo_tree_window = utils.get_appropriate_window(state)
 
       if is_neo_tree_window then
@@ -44,8 +44,8 @@ return {
           hide_by_name = {
             'android',
           },
-        }
-      }
+        },
+      },
     }
     vim.keymap.set('n', '<leader>n', '<cmd>Neotree toggle<CR>', { desc = '[N]eo Tree' })
   end,

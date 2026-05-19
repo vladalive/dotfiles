@@ -5,7 +5,7 @@ return {
     'BufWritePost',
   },
   config = function()
-    local lint = require('lint')
+    local lint = require 'lint'
 
     local function executable(name)
       return vim.fn.executable(name) == 1
@@ -13,11 +13,11 @@ return {
 
     local linters_by_ft = {}
 
-    if executable('rubocop') then
+    if executable 'rubocop' then
       linters_by_ft.ruby = { 'rubocop' }
     end
 
-    if executable('shellcheck') then
+    if executable 'shellcheck' then
       linters_by_ft.bash = { 'shellcheck' }
       linters_by_ft.sh = { 'shellcheck' }
     end

@@ -1,15 +1,15 @@
 -- Avante
 
 return {
-  "yetone/avante.nvim",
+  'yetone/avante.nvim',
   dependencies = {
-    "nvim-tree/nvim-web-devicons",
-    "stevearc/dressing.nvim",
-    "nvim-lua/plenary.nvim",
-    "MunifTanjim/nui.nvim",
-    "ravitemer/mcphub.nvim",
+    'nvim-tree/nvim-web-devicons',
+    'stevearc/dressing.nvim',
+    'nvim-lua/plenary.nvim',
+    'MunifTanjim/nui.nvim',
+    'ravitemer/mcphub.nvim',
   },
-  build = "make",
+  build = 'make',
   -- opts = {
   -- },
   config = function()
@@ -22,7 +22,7 @@ return {
         auto_apply_diff_after_generation = true,
       },
       -- provider = 'ollama',
-      provider = "copilot",
+      provider = 'copilot',
       -- provider = "openrouter",
       providers = {
         ollama = {
@@ -52,13 +52,13 @@ return {
       -- system_prompt as function ensures LLM always has latest MCP server state
       -- This is evaluated for every message, even in existing chats
       system_prompt = function()
-        local hub = require("mcphub").get_hub_instance()
-        return hub and hub:get_active_servers_prompt() or ""
+        local hub = require('mcphub').get_hub_instance()
+        return hub and hub:get_active_servers_prompt() or ''
       end,
       -- Using function prevents requiring mcphub before it's loaded
       custom_tools = function()
         return {
-          require("mcphub.extensions.avante").mcp_tool(),
+          require('mcphub.extensions.avante').mcp_tool(),
         }
       end,
     }

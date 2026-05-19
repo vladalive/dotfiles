@@ -36,8 +36,8 @@ return { -- Autocompletion
     luasnip.config.setup {}
 
     local check_backspace = function()
-      local col = vim.fn.col(".") - 1
-      return col == 0 or vim.fn.getline("."):sub(col, col):match("%s")
+      local col = vim.fn.col '.' - 1
+      return col == 0 or vim.fn.getline('.'):sub(col, col):match '%s'
     end
 
     cmp.setup {
@@ -104,8 +104,8 @@ return { -- Autocompletion
             fallback()
           end
         end, {
-            'i',
-            's',
+          'i',
+          's',
         }),
         ['<S-Tab>'] = cmp.mapping(function(fallback)
           if cmp.visible() then
@@ -116,8 +116,8 @@ return { -- Autocompletion
             fallback()
           end
         end, {
-            'i',
-            's',
+          'i',
+          's',
         }),
       },
       sources = {

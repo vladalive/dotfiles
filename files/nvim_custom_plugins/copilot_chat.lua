@@ -2,10 +2,10 @@
 return {
   'CopilotC-Nvim/CopilotChat.nvim',
   branch = 'main',
-  build = "make tiktoken",
+  build = 'make tiktoken',
   dependencies = {
     { 'zbirenbaum/copilot.lua' }, -- or github/copilot.vim
-    { "nvim-lua/plenary.nvim", branch = "master" }, -- for curl, log and async functions
+    { 'nvim-lua/plenary.nvim', branch = 'master' }, -- for curl, log and async functions
   },
   opts = {
     model = 'gpt-5-mini', -- GPT model to use, see ':CopilotChatModels' for available models
@@ -25,27 +25,27 @@ return {
     {
       '<leader>ccco',
       ':CopilotChatCommit<cr>',
-      desc = 'CopilotChat - Write commit message'
+      desc = 'CopilotChat - Write commit message',
     },
     {
       '<leader>cccs',
       ':CopilotChatCommitStaged<cr>',
-      desc = 'CopilotChat - Write commit message for staged'
+      desc = 'CopilotChat - Write commit message for staged',
     },
     {
       '<leader>ccb',
       ':CopilotChatBuffer ',
-      desc = 'CopilotChat - Chat with current buffer'
+      desc = 'CopilotChat - Chat with current buffer',
     },
     {
       '<leader>cce',
       '<cmd>CopilotChatExplain<cr>',
-      desc = 'CopilotChat - Explain code'
+      desc = 'CopilotChat - Explain code',
     },
     {
       '<leader>cct',
       '<cmd>CopilotChatTests<cr>',
-      desc = 'CopilotChat - Generate tests'
+      desc = 'CopilotChat - Generate tests',
     },
     {
       '<leader>ccT',
