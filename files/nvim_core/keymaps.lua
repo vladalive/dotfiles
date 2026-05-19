@@ -1,6 +1,6 @@
 vim.keymap.set({ 'n', 'v' }, ';', ':')
 vim.keymap.set('n', '//', '<cmd>nohlsearch<CR>', { silent = true })
-vim.keymap.set('v', '<Leader>r', ':<C-u>call RunSubstitutions()<CR>', { silent = true })
+vim.keymap.set('v', '<Leader>r', ':RunSubstitutions<CR>', { silent = true })
 
 vim.keymap.set('n', '[d', function()
   vim.diagnostic.jump { count = -1, float = true }

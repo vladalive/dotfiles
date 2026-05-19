@@ -1,14 +1,19 @@
-vim.cmd [[
-  function! RunSubstitutions()
-    execute "'<,'>s/\\s*$//g"
-    execute "'<,'>s/\"/'/g"
-    execute "'<,'>s/:\\([^= ]*\\)\\s*=>\\s*/\\1: /g"
-    execute "'<,'>s/{\\([^ ].*[^ ]\\)}/{ \\1 }/g"
-    execute "'<,'>s/^\\(\\s*\\)+/\\1/g"
-    execute "'<,'>s/\\[/ /g"
-    execute "'<,'>s/\\]/,/g"
-  endfunction
-]]
+vim.api.nvim_create_user_command('RunSubstitutions', function(args)
+  local lines = vim.api.nvim_buf_get_lines(0, args.line1 - 1, args.line2, false)
+
+  for index, line in ipairs(lines) do
+    line = line:gsub('%s+$', '')
+    line = line:gsub('"', "'")
+    line = line:gsub(':([^= ]*)%s*=>%s*', '%1: ')
+    line = line:gsub('{([^ ].*[^ ])}', '{ %1 }')
+    line = line:gsub('^(%s*)%+', '%1')
+    line = line:gsub('%[', ' ')
+    line = line:gsub('%]', ',')
+    lines[index] = line
+  end
+
+  vim.api.nvim_buf_set_lines(0, args.line1 - 1, args.line2, false, lines)
+end, { range = true })
 
 vim.api.nvim_create_user_command('FormatDisable', function(args)
   if args.bang then
