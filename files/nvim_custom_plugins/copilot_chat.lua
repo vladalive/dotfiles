@@ -8,7 +8,7 @@ return {
     { "nvim-lua/plenary.nvim", branch = "master" }, -- for curl, log and async functions
   },
   opts = {
-    model = 'gpt-4o', -- GPT model to use, see ':CopilotChatModels' for available models
+    model = 'gpt-5-mini', -- GPT model to use, see ':CopilotChatModels' for available models
     debug = false, -- Enable or disable debug mode, the log file will be in ~/.local/state/nvim/CopilotChat.nvim.log
     prompts = {
       MyCustomPrompt = {
