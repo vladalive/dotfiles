@@ -5,6 +5,11 @@ return {
     'williamboman/mason-lspconfig.nvim',
     'WhoIsSethDaniel/mason-tool-installer.nvim',
     { 'j-hui/fidget.nvim', opts = {} },
+    {
+      'folke/lazydev.nvim',
+      ft = 'lua',
+      opts = {},
+    },
   },
   config = function()
     vim.api.nvim_create_autocmd('LspAttach', {
@@ -50,10 +55,6 @@ return {
             runtime = { version = 'LuaJIT' },
             workspace = {
               checkThirdParty = false,
-              library = {
-                '${3rd}/luv/library',
-                unpack(vim.api.nvim_get_runtime_file('', true)),
-              },
             },
             completion = {
               callSnippet = 'Replace',
