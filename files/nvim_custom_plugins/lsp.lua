@@ -74,7 +74,7 @@ return {
     end
 
     require('mason').setup()
-    require('mason-tool-installer').setup { ensure_installed = { 'stylua' } }
+    require('mason-tool-installer').setup { ensure_installed = { 'stylua', 'selene' } }
 
     require('mason-lspconfig').setup {
       ensure_installed = server_names,

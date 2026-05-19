@@ -1,14 +1,5 @@
 -- Lualine: A blazing fast and easy to configure Neovim statusline plugin written in Lua.
 
-local function my_config()
-  return {
-    options = {
-      theme = 'gruvbox',
-    },
-    extensions = {},
-  }
-end
-
 -- from: https://github.com/nvim-lualine/lualine.nvim/blob/master/examples/evil_lualine.lua
 local function config_evil_lualine()
   -- Eviline config for lualine

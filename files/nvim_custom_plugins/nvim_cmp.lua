@@ -35,11 +35,6 @@ return { -- Autocompletion
     local luasnip = require 'luasnip'
     luasnip.config.setup {}
 
-    local check_backspace = function()
-      local col = vim.fn.col '.' - 1
-      return col == 0 or vim.fn.getline('.'):sub(col, col):match '%s'
-    end
-
     cmp.setup {
       snippet = {
         expand = function(args)
@@ -98,8 +93,6 @@ return { -- Autocompletion
             luasnip.expand()
           elseif luasnip.expand_or_jumpable() then
             luasnip.expand_or_jump()
-          elseif check_backspace() then
-            fallback()
           else
             fallback()
           end

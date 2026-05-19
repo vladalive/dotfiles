@@ -19,6 +19,8 @@
     ~/.rubocop.yml: 'files/rubocop.yml'
     ~/.config/nvim/init.lua: 'files/nvim-init.lua'
     ~/.config/nvim/.stylua.toml: 'files/nvim-stylua.toml'
+    ~/.config/nvim/selene.toml: 'files/nvim-selene.toml'
+    ~/.config/nvim/nvim.yml: 'files/nvim.yml'
     ~/.config/nvim/lua/custom/my: 'files/nvim_custom_plugins'
     ~/.config/mise/config.toml: 'files/mise.toml'
 
