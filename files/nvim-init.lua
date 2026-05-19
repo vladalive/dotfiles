@@ -1,5 +1,6 @@
 local config_file = vim.uv.fs_realpath(debug.getinfo(1, 'S').source:sub(2)) or debug.getinfo(1, 'S').source:sub(2)
 local config_dir = vim.fn.fnamemodify(config_file, ':h')
+local repo_dir = vim.fn.fnamemodify(config_dir, ':h')
 
 local function load_core(name)
   dofile(config_dir .. '/nvim_core/' .. name .. '.lua')
@@ -20,6 +21,7 @@ vim.opt.rtp:prepend(lazypath)
 require('lazy').setup({
   { import = 'custom.my' },
 }, {
+  lockfile = repo_dir .. '/lazy-lock.json',
   ui = {
     icons = vim.g.have_nerd_font and {} or {
       cmd = '⌘',
