@@ -1,6 +1,7 @@
 -- Github copilot cmp source
 return {
   'zbirenbaum/copilot-cmp',
+  event = 'InsertEnter',
   config = function()
     local source = require 'copilot_cmp.source'
 
