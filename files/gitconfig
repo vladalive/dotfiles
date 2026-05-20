@@ -173,32 +173,60 @@
     fi ;\
     CURRENT_BRANCH=$(git branch --show-current) ;\
     FOUND_BRANCHES=0 ;\
+    REMOVED_BRANCHES=0 ;\
+    REMOVED_WORKTREES=0 ;\
     for BRANCH in $(git for-each-ref --format='%(refname:short)' refs/heads --merged); do \
       if echo \"$BRANCH\" | grep -Eq \"^($IGNORED_BRANCHES)$\" || [ \"$BRANCH\" = \"$CURRENT_BRANCH\" ]; then \
         continue ;\
       fi ;\
       git merge-base --is-ancestor \"$BRANCH\" HEAD || continue ;\
       FOUND_BRANCHES=1 ;\
-      echo \"branch: $BRANCH\" ;\
+      WORKTREE_COUNT=0 ;\
       WORKTREES=$(git worktree list --porcelain | awk -v branch=\"refs/heads/$BRANCH\" 'BEGIN { path = \"\" } /^worktree / { path = substr($0, 10) } /^branch / { if ($2 == branch) print path }') ;\
       if [ -n \"$WORKTREES\" ]; then \
         echo \"$WORKTREES\" | while read -r WORKTREE; do \
           [ -z \"$WORKTREE\" ] && continue ;\
-          echo \"worktree: $WORKTREE\" ;\
           if [ \"$DRY_RUN\" -eq 1 ]; then \
-            echo \"dry-run: git worktree remove '$WORKTREE'\" ;\
+            : ;\
           else \
             git worktree remove \"$WORKTREE\" || exit 1 ;\
           fi ;\
         done || exit 1 ;\
+        WORKTREE_COUNT=$(echo \"$WORKTREES\" | sed '/^$/d' | wc -l | tr -d ' ') ;\
       fi ;\
+      WORKTREE_LABEL=worktree ;\
+      [ \"$WORKTREE_COUNT\" -eq 1 ] || WORKTREE_LABEL=worktrees ;\
       if [ \"$DRY_RUN\" -eq 1 ]; then \
-        echo \"dry-run: git branch -D '$BRANCH'\" ;\
+        if [ \"$WORKTREE_COUNT\" -gt 0 ]; then \
+          echo \"Would remove $BRANCH (and $WORKTREE_COUNT $WORKTREE_LABEL)\" ;\
+          echo \"$WORKTREES\" | sed '/^$/d; s/^/  /' ;\
+        else \
+          echo \"Would remove $BRANCH\" ;\
+        fi ;\
       else \
-        git branch -D \"$BRANCH\" || exit 1 ;\
+        git branch -D \"$BRANCH\" >/dev/null || exit 1 ;\
+        if [ \"$WORKTREE_COUNT\" -gt 0 ]; then \
+          echo \"Removed $BRANCH (and $WORKTREE_COUNT $WORKTREE_LABEL)\" ;\
+        else \
+          echo \"Removed $BRANCH\" ;\
+        fi ;\
       fi ;\
+      REMOVED_BRANCHES=$((REMOVED_BRANCHES + 1)) ;\
+      REMOVED_WORKTREES=$((REMOVED_WORKTREES + WORKTREE_COUNT)) ;\
     done ;\
-    [ \"$FOUND_BRANCHES\" -eq 1 ] || echo 'No merged branches to remove.' ;\
+    if [ \"$FOUND_BRANCHES\" -eq 1 ]; then \
+      BRANCH_LABEL=branch ;\
+      [ \"$REMOVED_BRANCHES\" -eq 1 ] || BRANCH_LABEL=branches ;\
+      WORKTREE_LABEL=worktree ;\
+      [ \"$REMOVED_WORKTREES\" -eq 1 ] || WORKTREE_LABEL=worktrees ;\
+      if [ \"$DRY_RUN\" -eq 1 ]; then \
+        echo \"Would remove $REMOVED_BRANCHES merged $BRANCH_LABEL and $REMOVED_WORKTREES $WORKTREE_LABEL.\" ;\
+      else \
+        echo \"Removed $REMOVED_BRANCHES merged $BRANCH_LABEL and $REMOVED_WORKTREES $WORKTREE_LABEL.\" ;\
+      fi ;\
+    else \
+      echo 'No merged branches to remove.' ;\
+    fi ;\
   }; f"
   branch-remove-merged-remote = "!f() { \
     REMOTE=\"${1:-origin}\" ;\
