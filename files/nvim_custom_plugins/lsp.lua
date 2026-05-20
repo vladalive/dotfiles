@@ -48,6 +48,8 @@ return {
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
+    -- LSP servers are editor support and may be Mason-managed even when
+    -- project-specific linters and formatters stay project-owned.
     local servers = {
       lua_ls = {
         settings = {
