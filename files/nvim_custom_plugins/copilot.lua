@@ -94,7 +94,10 @@ return {
       },
     }
 
-    opts.copilot_node_command = node_command()
+    local copilot_node_command = node_command()
+    if copilot_node_command ~= nil then
+      opts.copilot_node_command = { copilot_node_command, '--no-warnings' }
+    end
 
     require('copilot').setup(opts)
   end,
