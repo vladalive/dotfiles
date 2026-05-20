@@ -10,6 +10,16 @@ return {
     'ravitemer/mcphub.nvim',
   },
   build = 'make',
+  cmd = {
+    'AvanteAsk',
+    'AvanteBuild',
+    'AvanteChat',
+    'AvanteChatNew',
+    'AvanteClear',
+    'AvanteEdit',
+    'AvanteRefresh',
+    'AvanteToggle',
+  },
   -- opts = {
   -- },
   config = function()

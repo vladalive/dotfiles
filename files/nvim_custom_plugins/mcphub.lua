@@ -6,7 +6,7 @@ return {
   dependencies = {
     'nvim-lua/plenary.nvim',
   },
-  event = 'VeryLazy',
+  cmd = 'MCPHub',
   build = 'bundled_build.lua',
   config = function()
     require('mcphub').setup {
