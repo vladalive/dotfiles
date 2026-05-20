@@ -8,6 +8,7 @@ return {
       { '<leader>d', group = 'Document / Diagnostics' },
       { '<leader>s', group = 'Search' },
       { '<leader>w', group = 'Workspace' },
+      { '<leader>x', group = 'Trouble' },
     },
   },
   keys = {
