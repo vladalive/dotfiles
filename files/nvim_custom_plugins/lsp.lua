@@ -74,6 +74,9 @@ return {
     end
 
     require('mason').setup()
+
+    -- Keep Mason tool installs scoped to Neovim/dotfiles maintenance.
+    -- Project-specific linters and formatters should come from each project.
     require('mason-tool-installer').setup { ensure_installed = { 'stylua', 'selene' } }
 
     require('mason-lspconfig').setup {
