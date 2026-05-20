@@ -2,6 +2,10 @@
 return {
   'nvim-neo-tree/neo-tree.nvim',
   version = '*',
+  cmd = 'Neotree',
+  keys = {
+    { '<leader>n', '<cmd>Neotree toggle<CR>', desc = '[N]eo Tree' },
+  },
   dependencies = {
     'nvim-lua/plenary.nvim',
     'nvim-tree/nvim-web-devicons',
@@ -47,6 +51,5 @@ return {
         },
       },
     }
-    vim.keymap.set('n', '<leader>n', '<cmd>Neotree toggle<CR>', { desc = '[N]eo Tree' })
   end,
 }
