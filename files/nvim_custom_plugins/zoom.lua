@@ -2,10 +2,11 @@
 return {
   'nyngwang/NeoZoom.lua',
   enabled = true,
+  cmd = 'NeoZoomToggle',
+  keys = {
+    { '<leader><leader>', '<cmd>NeoZoomToggle<CR>', desc = 'Zoom window' },
+  },
   config = function()
-    vim.keymap.set('n', '<leader><leader>', function()
-      vim.cmd 'NeoZoomToggle'
-    end, { silent = true, nowait = true })
     require('neo-zoom').setup {
       popup = { enabled = true },
       winopts = {

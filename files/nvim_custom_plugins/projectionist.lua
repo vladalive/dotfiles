@@ -1,8 +1,18 @@
 -- Alternate files
 return {
   'tpope/vim-projectionist',
+  cmd = {
+    'A',
+    'AD',
+    'AO',
+    'AS',
+    'AT',
+    'AV',
+  },
+  keys = {
+    { '<leader>a<space>', '<cmd>A<CR>', desc = 'Go to [A]lternate file' },
+  },
   config = function()
-    vim.keymap.set('n', '<leader>a<space>', ':A<CR>', { silent = true, desc = 'Go to [A]lternate file' })
     vim.g.projectionist_heuristics = {
       ['*'] = {
         ['app/*.rb'] = {

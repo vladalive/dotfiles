@@ -5,5 +5,13 @@ return {
     'nvim-lua/plenary.nvim',
     'neovim/nvim-lspconfig',
   },
+  ft = {
+    'javascript',
+    'javascript.jsx',
+    'javascriptreact',
+    'typescript',
+    'typescript.tsx',
+    'typescriptreact',
+  },
   opts = {},
 }
