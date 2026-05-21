@@ -1,3 +1,6 @@
 [settings]
 legacy_version_file = false
 disable_tools = ["node", "ruby", "postgres", "redis", "imagemagick"]
+
+[settings.ruby]
+compile = false
