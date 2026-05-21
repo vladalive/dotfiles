@@ -10,7 +10,7 @@ return {
   },
   config = function()
     require('chatgpt').setup {
-      api_key_cmd = 'cat "$HOME/.config/.chatgpt.key"',
+      api_key_cmd = 'cat ' .. vim.fn.expand '$HOME/.config/.chatgpt.key',
     }
   end,
 }
