@@ -164,9 +164,9 @@ function backups_save () {
   BACKUP_PATH="$BACKUP_ROOT_PATH/$APP_NAME"
   OUTPUT_FILE_NAME="$DATESTAMP-$APP_NAME-$TYPE_NAME.tar.gz"
 
-  tar cv $SOURCE | gzip -9 > "$TMP_PATH/$OUTPUT_FILE_NAME"
   mkdir -p "$TMP_PATH"
   mkdir -p "$BACKUP_PATH"
+  tar cv $SOURCE | gzip -9 > "$TMP_PATH/$OUTPUT_FILE_NAME"
   mv "$TMP_PATH/$OUTPUT_FILE_NAME" "$BACKUP_PATH"
   echo "Backup: $OUTPUT_FILE_NAME"
   echo "Saved to: $BACKUP_PATH"
