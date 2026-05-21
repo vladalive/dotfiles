@@ -1,4 +1,6 @@
+# shellcheck shell=bash
 if [ -f ~/.bash_keys ]; then
+    # shellcheck source=/dev/null
     . ~/.bash_keys
 fi
 
@@ -26,7 +28,15 @@ alias umount_dingoo="sudo umount /dev/sdb"
 alias test-bandwith="wget --output-document=/dev/null http://speedtest.wdc01.softlayer.com/downloads/test500.zip"
 
 alias tail-log="tail -f log/development.log"
-alias tmux-envs-load='source ~/.bash_env && while IFS='"'"'='"'"' read -r name value; do value="${value#\'"'"'}"; value="${value%\'"'"'}"; tmux set-environment -g "$name" "$value"; done < <(envs dump)'
+
+function tmux-envs-load () {
+  # shellcheck source=/dev/null
+  source ~/.bash_env && while IFS='=' read -r name value; do
+    value="${value#\'}"
+    value="${value%\'}"
+    tmux set-environment -g "$name" "$value"
+  done < <(envs dump)
+}
 
 function mosh-kill () {
   local current_server
@@ -146,7 +156,7 @@ function wpid () {
 }
 
 function batch-js2coffee () {
-  find "$@" -name "*.js" -print -exec sh -c "js2coffee '{}' > '{}.coffee' && rm '{}'" -- {} \;
+  find "$@" -name "*.js" -print -exec sh -c 'for file do js2coffee "$file" > "$file.coffee" && rm "$file"; done' sh {} +
 }
 
 function gdrive_download () {
