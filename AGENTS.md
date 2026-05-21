@@ -16,7 +16,7 @@ Required for installation:
 
 - `git`
 - `bash`
-- `python3` for Dotbot
+- `python3` 3.7 or newer for Dotbot
 - network access to GitHub for submodules and Neovim plugins
 
 Expected by commonly used configs:
