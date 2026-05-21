@@ -26,8 +26,14 @@ alias umount_dingoo="sudo umount /dev/sdb"
 alias test-bandwith="wget --output-document=/dev/null http://speedtest.wdc01.softlayer.com/downloads/test500.zip"
 
 alias tail-log="tail -f log/development.log"
-alias mosh-kill="pgrep mosh-server | grep -v $(ps -o ppid --no-headers $$) | xargs -r kill"
 alias tmux-envs-load='source ~/.bash_env && while IFS='"'"'='"'"' read -r name value; do value="${value#\'"'"'}"; value="${value%\'"'"'}"; tmux set-environment -g "$name" "$value"; done < <(envs dump)'
+
+function mosh-kill () {
+  local current_server
+  current_server=$(ps -o ppid= "$$" | tr -d ' ')
+
+  pgrep mosh-server | grep -vx "$current_server" | xargs -r kill
+}
 
 gpg-cache() {
   if ! command -v gpg >/dev/null 2>&1; then
@@ -144,9 +150,12 @@ function batch-js2coffee () {
 }
 
 function gdrive_download () {
-  CONFIRM=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate "https://docs.google.com/uc?export=download&id=$1" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')
-  wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$CONFIRM&id=$1" -O $2
-  rm -rf /tmp/cookies.txt
+  local cookies
+  cookies=$(mktemp)
+
+  CONFIRM=$(wget --quiet --save-cookies "$cookies" --keep-session-cookies --no-check-certificate "https://docs.google.com/uc?export=download&id=$1" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')
+  wget --load-cookies "$cookies" "https://docs.google.com/uc?export=download&confirm=$CONFIRM&id=$1" -O "$2"
+  rm -f "$cookies"
 }
 
 function date_stamp () {
@@ -284,13 +293,17 @@ function git-rebase-all () {
 
 function gh-run-watch-current () {
   ID=$(gh run list --limit 1 --json databaseId --jq '.[0].databaseId')
-  gh run watch $ID
+  gh run watch "$ID"
 }
 
 function gh-pr-create-statusgator () {
   URL=$1
   ISSUE_NUMBER=$(printf '%s\n' "$URL" | grep -o '[0-9]\+' | tail -1)
   SHORT_URL=$(printf '%s\n' "$URL" | sed -n 's#^\(https://trello\.com/c/[^/[:space:]]*\).*$#\1#p')
+  if [ -z "$ISSUE_NUMBER" ] || [ -z "$SHORT_URL" ]; then
+    echo "gh-pr-create-statusgator: expected a Trello card URL" >&2
+    return 1
+  fi
 
   gh pr create --base master --reviewer cbartlett,alibby --fill --body "* [#$ISSUE_NUMBER]($SHORT_URL)"
 }
@@ -301,7 +314,7 @@ function grep-gh-run-errors-ruby () {
 
 function gh-failed () {
   JOB_ID=$1
-  gh run view --log-failed --job=$JOB_ID | grep-gh-run-errors-ruby
+  gh run view --log-failed --job="$JOB_ID" | grep-gh-run-errors-ruby
 }
 
 alias '=' >/dev/null 2>&1 && unalias '='
