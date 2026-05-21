@@ -289,11 +289,10 @@ function gh-run-watch-current () {
 
 function gh-pr-create-statusgator () {
   URL=$1
-  ISSUE_NUMBER=$(echo $URL | grep -o '[0-9]\+' | tail -1)
-  SHORT_URL=$(echo $URL | sed -n 's/^\(https\:\/\/trello\.com\/c\/\S*\)\/.*$/\1/p')
-  CMD="/usr/bin/gh pr create --base master --reviewer cbartlett,alibby --fill --body \"* [#$ISSUE_NUMBER]($SHORT_URL)\""
-  echo $CMD
-  $($CMD)
+  ISSUE_NUMBER=$(printf '%s\n' "$URL" | grep -o '[0-9]\+' | tail -1)
+  SHORT_URL=$(printf '%s\n' "$URL" | sed -n 's#^\(https://trello\.com/c/[^/[:space:]]*\).*$#\1#p')
+
+  gh pr create --base master --reviewer cbartlett,alibby --fill --body "* [#$ISSUE_NUMBER]($SHORT_URL)"
 }
 
 function grep-gh-run-errors-ruby () {
