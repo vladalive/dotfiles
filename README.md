@@ -51,8 +51,8 @@ chezmoi apply
 - `private_dot_config/` - source-state files applied into `$HOME/.config`
 - `symlink_dot_dotfiles.tmpl` - keeps `~/.dotfiles` pointing at the chezmoi source repo
 - `symlink_dot_janus.tmpl` - preserves the legacy Janus plugin symlink
-- `files/` - legacy dotbot source layout retained during migration
-- `dotbot/`, `install.conf.yaml` - legacy dotbot installer retained until cutover cleanup
+- `files/janus/` - legacy Vim/Janus plugins retained for `~/.janus`
+- `install` - wrapper around `chezmoi --source <repo> --force apply`
 
 ## Local Overrides
 

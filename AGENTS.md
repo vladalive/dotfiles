@@ -71,8 +71,8 @@ Use `chezmoi diff` to inspect live drift. Use `chezmoi add <target>` or
 - `private_dot_config/` - source-state files applied into `$HOME/.config`
 - `symlink_dot_dotfiles.tmpl` - keeps `~/.dotfiles` pointing at the chezmoi source repo
 - `symlink_dot_janus.tmpl` - preserves the legacy Janus plugin symlink
-- `files/` - legacy dotbot source layout retained during migration
-- `dotbot/`, `install.conf.yaml` - legacy dotbot installer retained until cutover cleanup
+- `files/janus/` - legacy Vim/Janus plugins retained for `~/.janus`
+- `install` - wrapper around `chezmoi --source <repo> --force apply`
 
 ## Usage
 
@@ -90,9 +90,9 @@ loading when needed.
 Prefer changing chezmoi source-state files such as `dot_zshrc`,
 `dot_gitconfig`, and `private_dot_config/nvim/init.lua`.
 
-Do not edit dependency or vendored code under `dotbot/` or `files/janus/`
-unless the task is explicitly to update that dependency. For legacy Vim plugins,
-prefer submodule updates over direct source edits.
+Do not edit dependency or vendored code under `files/janus/` unless the task is
+explicitly to update that dependency. For legacy Vim plugins, prefer submodule
+updates over direct source edits.
 
 For Neovim changes:
 
