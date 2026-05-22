@@ -4,8 +4,11 @@
 /.claude/
 /.ruby-lsp/
 /.tool-versions
+/.nvmrc
+/.playwright/
 /AGENTS.md
 /LICENSE.md
 /README.md
+/dotbot/
 /files/
 /install
