@@ -1,9 +1,10 @@
 # Dotfiles
 
-Personal dotfiles managed by [Dotbot](https://github.com/anishathalye/dotbot).
+Personal dotfiles managed by [chezmoi](https://www.chezmoi.io/).
 
-The repository is the source of truth. Files installed into `$HOME` are symlinks
-created from `install.conf.yaml`.
+The repository is the source of truth. Chezmoi applies source-state files from
+this repo into `$HOME`. Most installed files are real files; legacy
+compatibility symlinks are kept only where they preserve existing behavior.
 
 ## Prerequisites
 
@@ -11,7 +12,7 @@ Required for install:
 
 - `git`
 - `bash`
-- `python3` 3.7 or newer
+- `chezmoi`
 - network access to GitHub for submodules
 
 Commonly used by the installed configuration:
@@ -28,30 +29,30 @@ Commonly used by the installed configuration:
 
 ## Installation
 
-```bash
-git submodule update --init --recursive
-./install
-```
-
-Use a dry run before changing an existing machine:
+On an existing checkout:
 
 ```bash
 ./install --dry-run
+./install
+```
+
+On a new machine:
+
+```bash
+chezmoi init git@github.com:vladalive/dotfiles.git
+chezmoi diff
+chezmoi apply
 ```
 
 ## Layout
 
-- `install.conf.yaml` - Dotbot manifest
-- `files/` - dotfile sources
-- `files/zshrc`, `files/bashrc`, `files/bash_profile`, `files/bash_aliases` - shell config
-- `files/gitconfig` - Git config
-- `files/tmux.conf` - tmux config
-- `files/nvim-init.lua` - Neovim entrypoint
-- `files/nvim_core/` - core Neovim config
-- `files/nvim_custom_plugins/` - Lazy.nvim plugin specs
-- `files/janus/` - legacy Vim/Janus plugins
-- `dotbot/` - Dotbot submodule
-- `lazy-lock.json` - pinned Neovim plugin revisions
+- `.chezmoiignore` - excludes repo docs, legacy dotbot layout, and vendored code from chezmoi target state
+- `dot_*` - source-state files applied into `$HOME`
+- `private_dot_config/` - source-state files applied into `$HOME/.config`
+- `symlink_dot_dotfiles.tmpl` - keeps `~/.dotfiles` pointing at the chezmoi source repo
+- `symlink_dot_janus.tmpl` - preserves the legacy Janus plugin symlink
+- `files/` - legacy dotbot source layout retained during migration
+- `dotbot/`, `install.conf.yaml` - legacy dotbot installer retained until cutover cleanup
 
 ## Local Overrides
 
@@ -63,24 +64,25 @@ Common local files:
 - `$HOME/.bash_env` and `$HOME/.bash_keys` for local environment/secrets
 - `$HOME/.config/.chatgpt.key` for `ChatGPT.nvim`
 
-Do not edit installed symlinks directly. Edit files in this repo, then rerun
-`./install` if needed.
+Use `chezmoi diff` to inspect live drift. Use `chezmoi add <target>` or
+`chezmoi re-add` only after reviewing the diff and deciding the live change
+belongs in git.
 
 ## Development
 
 Run focused checks for touched areas:
 
 ```bash
-zsh -n files/zshrc
-bash -n files/bashrc files/bash_profile files/bash_aliases
-git config --file files/gitconfig --list >/dev/null
+zsh -n dot_zshrc
+bash -n dot_bashrc dot_bash_profile dot_bash_aliases
+git config --file dot_gitconfig --list >/dev/null
 git submodule status --recursive
 ```
 
 For Neovim changes, load the relevant Lazy plugin headlessly:
 
 ```bash
-nvim --headless -u files/nvim-init.lua \
+nvim --headless -u private_dot_config/nvim/init.lua \
   '+lua require("lazy").load({ plugins = { "PLUGIN_NAME" } }); vim.wait(1000)' \
   '+qa'
 ```
