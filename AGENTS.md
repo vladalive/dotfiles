@@ -2,9 +2,10 @@
 
 ## Purpose
 
-This repository contains personal dotfiles managed by Dotbot. The source of
-truth is this repository; installed files in `$HOME` are symlinks created from
-`install.conf.yaml`.
+This repository contains personal dotfiles managed by chezmoi. The source of
+truth is this repository; chezmoi applies source-state files from this repo into
+`$HOME`. Most installed files are real files. Legacy symlinks are kept only when
+they preserve existing behavior.
 
 The repo covers shell startup files, Git, tmux, legacy Vim/Janus configuration,
 Neovim/Lazy.nvim configuration, Ruby defaults, ctags, and mise/asdf-related
@@ -16,7 +17,7 @@ Required for installation:
 
 - `git`
 - `bash`
-- `python3` 3.7 or newer for Dotbot
+- `chezmoi`
 - network access to GitHub for submodules and Neovim plugins
 
 Expected by commonly used configs:
@@ -45,30 +46,33 @@ Optional or host-specific:
 
 ## Installation
 
-Initialize submodules and run Dotbot:
+On an existing checkout, preview and apply chezmoi:
 
 ```bash
-git submodule update --init --recursive
+./install --dry-run
 ./install
 ```
 
-Do not edit installed symlinks in `$HOME` directly. Edit the corresponding file
-in this repository, then rerun `./install` if relinking is needed.
+On a new machine:
+
+```bash
+chezmoi init git@github.com:vladalive/dotfiles.git
+chezmoi diff
+chezmoi apply
+```
+
+Use `chezmoi diff` to inspect live drift. Use `chezmoi add <target>` or
+`chezmoi re-add` only after deciding the live change belongs in git.
 
 ## Layout
 
-- `install.conf.yaml` - Dotbot manifest for symlinks and install commands
-- `files/` - repo-owned dotfile sources
-- `files/bashrc`, `files/bash_profile`, `files/bash_aliases`, `files/zshrc` - shell configuration
-- `files/gitconfig`, `files/gitignore` - Git configuration
-- `files/tmux.conf` - tmux configuration
-- `files/vimrc.local`, `files/janus/` - legacy Vim/Janus configuration
-- `files/nvim-init.lua` - Neovim entrypoint
-- `files/nvim_core/` - Neovim options, commands, keymaps, and autocmds
-- `files/nvim_custom_plugins/` - Lazy.nvim plugin specs
-- `files/mise.toml`, `files/asdfrc`, `files/default-gems` - language tooling defaults
-- `dotbot/` - Dotbot submodule
-- `lazy-lock.json` - pinned Neovim plugin revisions
+- `.chezmoiignore` - excludes repo docs, legacy dotbot layout, and vendored code from chezmoi target state
+- `dot_*` - source-state files applied into `$HOME`
+- `private_dot_config/` - source-state files applied into `$HOME/.config`
+- `symlink_dot_dotfiles.tmpl` - keeps `~/.dotfiles` pointing at the chezmoi source repo
+- `symlink_dot_janus.tmpl` - preserves the legacy Janus plugin symlink
+- `files/janus/` - legacy Vim/Janus plugins retained for `~/.janus`
+- `install` - wrapper around `chezmoi --source <repo> --force apply`
 
 ## Usage
 
@@ -83,16 +87,17 @@ loading when needed.
 
 ## Development
 
-Prefer changing repo-owned source files under `files/` and `install.conf.yaml`.
+Prefer changing chezmoi source-state files such as `dot_zshrc`,
+`dot_gitconfig`, and `private_dot_config/nvim/init.lua`.
 
-Do not edit dependency or vendored code under `dotbot/` or `files/janus/`
-unless the task is explicitly to update that dependency. For legacy Vim plugins,
-prefer submodule updates over direct source edits.
+Do not edit dependency or vendored code under `files/janus/` unless the task is
+explicitly to update that dependency. For legacy Vim plugins, prefer submodule
+updates over direct source edits.
 
 For Neovim changes:
 
-- edit `files/nvim-init.lua`, `files/nvim_core/`, or `files/nvim_custom_plugins/`
-- keep plugin configuration in focused files under `files/nvim_custom_plugins/`
+- edit `private_dot_config/nvim/init.lua`, `private_dot_config/nvim/nvim_core/`, or `private_dot_config/nvim/lua/custom/my/`
+- keep plugin configuration in focused files under `private_dot_config/nvim/lua/custom/my/`
 - do not run `Lazy sync` as a verification step unless updating plugins is
   intentional
 - treat `lazy-lock.json` changes as plugin updates, not incidental config edits
@@ -106,14 +111,14 @@ Run focused checks for the area touched.
 Shell:
 
 ```bash
-zsh -n files/zshrc
-bash -n files/bashrc files/bash_profile files/bash_aliases
+zsh -n dot_zshrc
+bash -n dot_bashrc dot_bash_profile dot_bash_aliases
 ```
 
 Git config:
 
 ```bash
-git config --file files/gitconfig --list >/dev/null
+git config --file dot_gitconfig --list >/dev/null
 ```
 
 Submodules:
@@ -125,15 +130,15 @@ git submodule status --recursive
 tmux:
 
 ```bash
-tmux -L dotfiles-test -f files/tmux.conf start-server \; \
-  source-file files/tmux.conf \; \
+tmux -L dotfiles-test -f dot_tmux.conf start-server \; \
+  source-file dot_tmux.conf \; \
   kill-server
 ```
 
 Neovim, for a specific Lazy plugin:
 
 ```bash
-nvim --headless -u files/nvim-init.lua \
+nvim --headless -u private_dot_config/nvim/init.lua \
   '+lua require("lazy").load({ plugins = { "PLUGIN_NAME" } }); vim.wait(1000)' \
   '+qa'
 ```
@@ -141,7 +146,7 @@ nvim --headless -u files/nvim-init.lua \
 Neovim, for core startup:
 
 ```bash
-nvim --headless -u files/nvim-init.lua '+qa'
+nvim --headless -u private_dot_config/nvim/init.lua '+qa'
 ```
 
 Formatting/linting tools such as `stylua`, `selene`, `shellcheck`, and
