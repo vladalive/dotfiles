@@ -1,0 +1,355 @@
+[user]
+  name = Vlad Alive
+  email = vladalive@gmail.com
+
+[color]
+  diff = auto
+  status = auto
+  branch = auto
+  ui = true
+
+[rerere]
+  enabled = 1
+
+[alias]  # shortcuts
+  s      = status
+  c      = checkout
+  cw     = "!f() { if [ \"$#\" -eq 1 ]; then branch=\"${1#refs/heads/}\"; worktree=$(git worktree list --porcelain | awk -v branch=\"refs/heads/$branch\" '/^worktree / { path = substr($0, 10) } /^branch / && $2 == branch { print path; exit }'); if [ -n \"$worktree\" ]; then printf '%s\\n' \"$worktree\"; return 0; fi; fi; git checkout \"$@\"; }; f"
+  b      = branch
+
+  env-branch-master     = config --get --default master branches.master
+  env-branch-develop    = config --get --default develop branches.develop
+  env-branch-staging    = config --get --default staging branches.staging
+  env-branch-production = config --get --default production branches.production
+
+  cm = "!git checkout $(git env-branch-master)"
+  cd = "!git checkout $(git env-branch-develop)"
+  gpg-signingkey-local = "!f() { key=$(gpg --list-secret-keys --keyid-format=long | awk '/^sec/ { sub(/^.*\\//, \"\", $2); print $2; exit }'); if [ -z \"$key\" ]; then echo \"No GPG secret key found\" >&2; return 1; fi; git config --file ~/.gitconfig.local user.signingkey \"$key\"; echo \"Configured ~/.gitconfig.local user.signingkey=$key\"; }; f"
+
+  d      = diff
+  dw     = diff -b -w
+  dc     = diff -b --cached
+  ds     = diff -b --stat
+  dst    = diff --staged
+  dn     = diff --name-only
+
+  # dm     = diff master...
+  dm = "!git diff $(git env-branch-master)..."
+
+  # dd     = diff develop...
+  dd = "!git diff $(git env-branch-develop)..."
+  ddst = "!git diff --stat $(git env-branch-develop)..."
+
+  co     = commit
+  com    = commit -m
+  cof    = commit -m 'f'
+  cofam  = commit --amend --no-edit
+
+  # rebm   = rebase master
+  rebm = "!git rebase $(git env-branch-master)"
+
+  # rebd   = rebase develop
+  rebd = "!git rebase $(git env-branch-develop)"
+
+  rebp   = rebase production
+
+  # rebim  = rebase -i master
+  rebim = "!git rebase -i $(git env-branch-master)"
+
+  # rebid  = rebase -i develop
+  rebid = "!git rebase -i $(git env-branch-develop)"
+
+  # rebip  = rebase -i production
+  rebip = "!git rebase -i $(git env-branch-production)"
+
+  rebi   = rebase -i
+  rebi1  = rebase -i HEAD~1
+  rebi2  = rebase -i HEAD~2
+  rebi3  = rebase -i HEAD~3
+  rebi4  = rebase -i HEAD~4
+  rebi5  = rebase -i HEAD~5
+
+  show0  = show HEAD~0
+  show1  = show HEAD~1
+  show2  = show HEAD~2
+  show3  = show HEAD~3
+  show4  = show HEAD~4
+  show5  = show HEAD~5
+
+  # summary of what you're going to push
+  ps     = log --oneline origin...
+
+  # like "git log", but include the diffs
+  w      = whatchanged -p
+
+  # changes since we last did a push
+  wo     = whatchanged -p origin...
+
+  lo     = log --oneline
+
+  # lom    = log --oneline master..
+  lom = "!git log --oneline $(git env-branch-master).."
+
+  # lod    = log --oneline develop..
+  lod = "!git log --oneline $(git env-branch-develop).."
+
+  # lop    = log --oneline production..
+  lop = "!git log --oneline $(git env-branch-production).."
+
+  lm     = log --pretty=format:'%an | %s'
+  lmd    = log --author="$(git config user.name)" --since='1 day'
+  lmw    = log --author="$(git config user.name)" --since='1 week'
+  lmm    = log --author="$(git config user.name)" --since='1 month'
+  lg     = log --graph --all --abbrev-commit --decorate --date=relative \
+    --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
+  last   = log -1 HEAD --stat
+
+  logsum = shortlog --numbered --summary --email
+
+  g      = grep --break --heading --line-number
+  gn     = grep --name-only
+  grepa  = grep -A 5
+  grepb  = grep -B 5
+  grepc  = grep -C 5
+
+  assume-unchanged-files = "!git ls-files -v | grep '^h' | sed 's/^h //'"
+  assume-unchanged-set = update-index --assume-unchanged
+  assume-unchanged-unset = update-index --no-assume-unchanged
+
+  create-pull-request = !sh -c 'stash pull-request $0 $@'
+  up = pull --rebase --autostash
+
+  log-my-branches = "!f() { \
+    PERIOD=${1:-week} ;\
+    SINCE=\"1 $PERIOD ago\" ;\
+    AUTHOR=$(git config user.name) ;\
+    BRANCHES=$(git branch|perl -pe 's/^..//') ;\
+    echo \"my branches since $SINCE:\" ;\
+    for k in $BRANCHES; do \
+      COMMIT=$(git show --since=\"$SINCE\" --author=\"$AUTHOR\" --pretty=format:\"%Cgreen%ci %Cblue%cr%Creset\" $k|head -n 1) ;\
+      RESULT="$COMMIT\\\t$k" ;\
+      echo $RESULT ;\
+    done|sort -r| grep : ;\
+  }; f"
+
+  logrep = "!f() { \
+    git log --oneline | grep \"$1\" | less ;\
+  }; f"
+  grep-replace = "!f() { \
+    git grep -l \"$1\" | xargs -r sed -i "s/$1/$2/g" ;\
+  }; f"
+
+  grep-ruby = "!f() { \
+    git grep \"$1\" -- '*.rb' ;\
+  }; f"
+  grep-html = "!f() { \
+    git grep \"$1\" -- '*.html' '*.haml' '*.jade' '*.pug' '*.vue' ;\
+  }; f"
+  grep-css = "!f() { \
+    git grep \"$1\" -- '*.css' '*.scss' '*.sass' '*.styl' '*.less' ;\
+  }; f"
+  grep-js = "!f() { \
+    git grep \"$1\" -- '*.js' '*.coffee' '*.ts' ;\
+  }; f"
+  cg = "!f() { \
+    TARGET=${1:-master} ;\
+    BRANCH=$(git branch | grep $TARGET | grep -v '*' | awk 'NR==1{print $TARGET}') ;\
+    [ -n "$BRANCH" ] && git checkout $BRANCH || true ;\
+  }; f"
+  rcom = "!f() { \
+    eval \"$1\";\
+    git add .;\
+    git commit -m \"[run] $1\";\
+  }; f"
+  branch-upstream = "!f() { \
+    git branch --show-current | xargs -r -I{} sh -c 'git branch -u origin/$1' -- {} ;\
+  }; f"
+  branch-remove-merged = "!f() { \
+    IGNORED_BRANCHES='master|main|develop|deploy|production|staging|qa'; \
+    DRY_RUN=0 ;\
+    if [ \"$1\" = '--dry-run' ]; then \
+      DRY_RUN=1 ;\
+      shift ;\
+    fi ;\
+    CURRENT_BRANCH=$(git branch --show-current) ;\
+    FOUND_BRANCHES=0 ;\
+    REMOVED_BRANCHES=0 ;\
+    REMOVED_WORKTREES=0 ;\
+    for BRANCH in $(git for-each-ref --format='%(refname:short)' refs/heads --merged); do \
+      if echo \"$BRANCH\" | grep -Eq \"^($IGNORED_BRANCHES)$\" || [ \"$BRANCH\" = \"$CURRENT_BRANCH\" ]; then \
+        continue ;\
+      fi ;\
+      git merge-base --is-ancestor \"$BRANCH\" HEAD || continue ;\
+      FOUND_BRANCHES=1 ;\
+      WORKTREE_COUNT=0 ;\
+      WORKTREES=$(git worktree list --porcelain | awk -v branch=\"refs/heads/$BRANCH\" 'BEGIN { path = \"\" } /^worktree / { path = substr($0, 10) } /^branch / { if ($2 == branch) print path }') ;\
+      if [ -n \"$WORKTREES\" ]; then \
+        echo \"$WORKTREES\" | while read -r WORKTREE; do \
+          [ -z \"$WORKTREE\" ] && continue ;\
+          if [ \"$DRY_RUN\" -eq 1 ]; then \
+            : ;\
+          else \
+            git worktree remove \"$WORKTREE\" || exit 1 ;\
+          fi ;\
+        done || exit 1 ;\
+        WORKTREE_COUNT=$(echo \"$WORKTREES\" | sed '/^$/d' | wc -l | tr -d ' ') ;\
+      fi ;\
+      WORKTREE_LABEL=worktree ;\
+      [ \"$WORKTREE_COUNT\" -eq 1 ] || WORKTREE_LABEL=worktrees ;\
+      if [ \"$DRY_RUN\" -eq 1 ]; then \
+        if [ \"$WORKTREE_COUNT\" -gt 0 ]; then \
+          echo \"Would remove $BRANCH (and $WORKTREE_COUNT $WORKTREE_LABEL)\" ;\
+          echo \"$WORKTREES\" | sed '/^$/d; s/^/  /' ;\
+        else \
+          echo \"Would remove $BRANCH\" ;\
+        fi ;\
+      else \
+        git branch -D \"$BRANCH\" >/dev/null || exit 1 ;\
+        if [ \"$WORKTREE_COUNT\" -gt 0 ]; then \
+          echo \"Removed $BRANCH (and $WORKTREE_COUNT $WORKTREE_LABEL)\" ;\
+        else \
+          echo \"Removed $BRANCH\" ;\
+        fi ;\
+      fi ;\
+      REMOVED_BRANCHES=$((REMOVED_BRANCHES + 1)) ;\
+      REMOVED_WORKTREES=$((REMOVED_WORKTREES + WORKTREE_COUNT)) ;\
+    done ;\
+    if [ \"$FOUND_BRANCHES\" -eq 1 ]; then \
+      BRANCH_LABEL=branch ;\
+      [ \"$REMOVED_BRANCHES\" -eq 1 ] || BRANCH_LABEL=branches ;\
+      WORKTREE_LABEL=worktree ;\
+      [ \"$REMOVED_WORKTREES\" -eq 1 ] || WORKTREE_LABEL=worktrees ;\
+      if [ \"$DRY_RUN\" -eq 1 ]; then \
+        echo \"Would remove $REMOVED_BRANCHES merged $BRANCH_LABEL and $REMOVED_WORKTREES $WORKTREE_LABEL.\" ;\
+      else \
+        echo \"Removed $REMOVED_BRANCHES merged $BRANCH_LABEL and $REMOVED_WORKTREES $WORKTREE_LABEL.\" ;\
+      fi ;\
+    else \
+      echo 'No merged branches to remove.' ;\
+    fi ;\
+  }; f"
+  branch-remove-merged-remote = "!f() { \
+    REMOTE=\"${1:-origin}\" ;\
+    IGNORED_BRANCHES='master|main|develop|deploy|production|staging|qa|backup' ;\
+    git fetch \"$REMOTE\" ;\
+    MERGED_BRANCHES=$(git branch -r --merged | grep \"$REMOTE/\" | sed \"s# *$REMOTE/##\" | grep -v -E \"($IGNORED_BRANCHES)\") ;\
+    if [ -n \"$MERGED_BRANCHES\" ]; then \
+      DELETE_CMD=$(echo \"$MERGED_BRANCHES\" | sed \"s/^/:/\" | tr '\n' ' ') ;\
+      git push \"$REMOTE\" $DELETE_CMD ;\
+    else \
+      echo \"No merged branches to delete.\" ;\
+    fi ;\
+  }; f"
+
+[core]
+  excludesfile = ~/.gitignore
+  autocrlf = input
+  # pager = diff-so-fancy | less --tabs=4 -cR
+  # pager = delta
+  pager = delta --diff-so-fancy | less --tabs=4 -cRS
+  # pager = delta | less --tabs=4 -cRS
+  fsmonitor = false
+  untrackedcache = true
+
+[github]
+  user = vladalive
+
+[credential]
+  helper = cache
+
+[gist]
+  private = yes
+
+[grep]
+  lineNumber = true
+  patternType = extended
+	extendedRegexp = true
+
+[diff]
+  tool = vimdiff
+  compactionHeuristic = true
+  colorMoved = default
+
+[merge]
+  tool = vimdiff
+  conflictstyle = diff3
+  ff = only
+
+[mergetool]
+  prompt = false
+  keepBackup = false
+
+[difftool]
+  prompt = false
+
+[push]
+  default = current
+
+[rebase]
+  autosquash = true
+  autoStash = true
+
+[git-up "bundler"]
+  check = true
+
+# [remote "origin"]
+#   fetch = +refs/pull/*/head:refs/remotes/origin/pr/*
+[mergetool "diffconflicts"]
+	cmd = vim -c DiffConflicts \"$MERGED\" \"$BASE\" \"$LOCAL\" \"$REMOTE\"
+	trustExitCode = true
+[pull]
+  rebase = true
+  ff = only
+[gitflow "branch"]
+  master = master
+  develop = develop
+[gitflow "prefix"]
+	feature = feature/
+	bugfix = bugfix/
+	release = release/
+	hotfix = hotfix/
+	support = support/
+	versiontag = 
+[color "diff-highlight"]
+	oldNormal = red bold
+	oldHighlight = red bold 52
+	newNormal = green bold
+	newHighlight = green bold 22
+[color "diff"]
+	meta = 11
+	frag = magenta bold
+	func = 146 bold
+	commit = yellow bold
+	old = red bold
+	new = green bold
+	whitespace = red reverse
+[diff-so-fancy]
+  useUnicodeRuler = true
+[interactive]
+  # diffFilter = diff-so-fancy --patch
+  diffFilter = delta --color-only
+  # diffFilter = delta --diff-so-fancy
+[delta "decorations"]
+  # side-by-side = true
+  # line-numbers = true
+  commit-decoration-style = blue ol
+  commit-style = raw
+  file-style = omit
+  hunk-header-decoration-style = blue box
+  hunk-header-file-style = red
+  hunk-header-line-number-style = "#067a00"
+  hunk-header-style = file line-number syntax
+[delta]
+  navigate = true
+  light = false
+  # features = decorations
+  # features = unobtrusive-line-numbers decorations
+[commit]
+  gpgsign = true
+[init]
+  defaultBranch = master
+
+[include]
+  path = ~/.gitconfig.local
+[safe]
+  directory = /workspace
