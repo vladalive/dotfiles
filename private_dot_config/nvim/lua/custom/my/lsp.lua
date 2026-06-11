@@ -88,7 +88,11 @@ return {
       vim.lsp.config(server_name, server)
     end
 
-    require('mason').setup()
+    require('mason').setup {
+      -- Keep the launch environment authoritative. Mason tools remain available,
+      -- but they should not shadow project/version-manager shims such as ruby-lsp.
+      PATH = 'append',
+    }
 
     -- Keep Mason tool installs scoped to Neovim/dotfiles maintenance.
     -- Project-specific linters and formatters should come from each project.
