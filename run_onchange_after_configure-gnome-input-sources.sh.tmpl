@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v gsettings >/dev/null 2>&1; then
+  exit 0
+fi
+
+schema=org.gnome.desktop.input-sources
+
+if ! gsettings list-schemas | grep -qx "$schema"; then
+  exit 0
+fi
+
+# Keep English as the first XKB group so Ctrl shortcuts resolve as Latin while
+# Russian remains available for normal text entry.
+gsettings set "$schema" sources "[('xkb', 'us'), ('xkb', 'ru')]"
+
+current_options=$(gsettings get "$schema" xkb-options)
+if [[ "$current_options" != *"'grp:ctrl_select'"* ]]; then
+  OPTIONS="$current_options" python3 - <<'PY' | xargs -0 gsettings set org.gnome.desktop.input-sources xkb-options
+import ast
+import os
+import sys
+
+raw_options = os.environ["OPTIONS"]
+options = [] if raw_options == "@as []" else ast.literal_eval(raw_options)
+options.append("grp:ctrl_select")
+sys.stdout.write(str(options).replace('"', "'") + "\0")
+PY
+fi

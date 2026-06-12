@@ -51,6 +51,7 @@ chezmoi apply
 - `private_dot_config/` - source-state files applied into `$HOME/.config`
 - `symlink_dot_dotfiles.tmpl` - keeps `~/.dotfiles` pointing at the chezmoi source repo
 - `symlink_dot_janus.tmpl` - preserves the legacy Janus plugin symlink
+- `run_onchange_after_configure-gnome-input-sources.sh.tmpl` - configures GNOME XKB input sources as English/Russian with Latin Ctrl shortcuts
 - `files/janus/` - legacy Vim/Janus plugins retained for `~/.janus`
 - `install` - wrapper around `chezmoi --source <repo> --force apply`
 
