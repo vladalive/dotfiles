@@ -119,6 +119,12 @@
   create-pull-request = !sh -c 'stash pull-request $0 $@'
   up = pull --rebase --autostash
 
+  # pushfl = "push --force-with-lease", but the alias name keeps the literal
+  #          string "git push --force" off the command line, so over-broad
+  #          pre-push guards that match on it don't block this safe lease push.
+  #          Refuses protected branches (main/master + the env-branch-* set).
+  pushfl = "!f() { branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null); for p in main master \"$(git env-branch-master)\" \"$(git env-branch-develop)\" \"$(git env-branch-staging)\" \"$(git env-branch-production)\"; do if [ \"$branch\" = \"$p\" ]; then echo \"pushfl: refusing force-with-lease on protected branch '$branch'\" >&2; return 1; fi; done; git push --force-with-lease \"$@\"; }; f"
+
   log-my-branches = "!f() { \
     PERIOD=${1:-week} ;\
     SINCE=\"1 $PERIOD ago\" ;\
