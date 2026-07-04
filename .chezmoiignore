@@ -2,6 +2,7 @@
 # live at the repository root using chezmoi naming conventions such as dot_zshrc
 # and private_dot_config/nvim/init.lua.
 /.claude/
+/.codegraph/
 /.ruby-lsp/
 /.tool-versions
 /.nvmrc
