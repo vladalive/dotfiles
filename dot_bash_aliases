@@ -47,10 +47,20 @@ function _ai_step () {
     _ai_skip+=("$label"); return 0
   fi
   printf '\n\033[1m==> %s\033[0m\n' "$label"
-  if "$@"; then
+  # Cap each step so a wedged tool can never freeze the whole run. A shell
+  # function can't be wrapped by `timeout` (it self-guards internally); binaries
+  # get a generous ceiling (default 600s, override with CB_AI_STEP_TIMEOUT).
+  local limit="${CB_AI_STEP_TIMEOUT:-600}" rc
+  if [ "$(type -t "$1")" = "function" ]; then
+    "$@"; rc=$?
+  else
+    timeout -k 10 "$limit" "$@"; rc=$?
+    [ "$rc" -eq 124 ] && printf '\033[31mFAIL %s (timed out after %ss; continuing)\033[0m\n' "$label" "$limit"
+  fi
+  if [ "$rc" -eq 0 ]; then
     _ai_ok+=("$label")
   else
-    printf '\033[31mFAIL %s (continuing)\033[0m\n' "$label"
+    [ "$rc" -eq 124 ] || printf '\033[31mFAIL %s (continuing)\033[0m\n' "$label"
     _ai_fail+=("$label")
   fi
 }
@@ -60,14 +70,15 @@ function _ai_step () {
 # A dead/stale entry (plugin removed upstream) is reported but does NOT fail the
 # step - only a marketplace-refresh failure does.
 function _ai_update_claude_plugins () {
-  claude plugin marketplace update </dev/null || return 1
+  timeout -k 5 120 claude plugin marketplace update </dev/null || return 1
   # Read the plugin list on FD 3 and give each update its own /dev/null stdin, so
   # a plugin command can't consume the loop's input pipe and hang it (a `while
-  # read` loop must never share stdin with commands it runs).
+  # read` loop must never share stdin with commands it runs). Each update is also
+  # time-capped so one wedged plugin is skipped, not fatal.
   local p failed=()
   while IFS= read -r p <&3; do
     [ -n "$p" ] || continue
-    claude plugin update "$p" </dev/null || failed+=("$p")
+    timeout -k 5 90 claude plugin update "$p" </dev/null || failed+=("$p")
   done 3< <(claude plugin list 2>/dev/null | grep -oE '[A-Za-z0-9._-]+@[A-Za-z0-9._-]+' | sort -u)
   [ ${#failed[@]} -eq 0 ] || printf '\033[2m   note: %d plugin(s) did not update: %s\033[0m\n' "${#failed[@]}" "${failed[*]}"
   return 0
