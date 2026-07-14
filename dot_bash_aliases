@@ -30,13 +30,14 @@ function my-update () {
 }
 
 # --- AI tooling updater -------------------------------------------------------
-# my-update-ai: update the whole AI dev stack in one shot - Claude Code (CLI +
-# its marketplaces/plugins/bundled skills), Codex, Pilot, agents-kit/sx (binary +
-# vault assets), and uv (self + installed tools). Each tool is isolated: a missing
-# CLI is skipped, a failing update is recorded but does NOT abort the rest. Prints
-# a summary and exits non-zero if anything failed. OS/apt/brew updates live in
-# `my-update`; run `my-update && my-update-ai` to do both.
-# Note: CLI self-updates (claude/codex/pilot/sx) take effect after you restart them.
+# my-update-ai: update the AI dev stack in one shot - Claude Code (CLI +
+# marketplaces/plugins/bundled skills) and Pilot, which itself cascades updates to
+# RTK, CodeGraph, the LSP/Chrome-DevTools plugins, and the Codex integration.
+# Each tool is isolated: a missing CLI is skipped, a failing step is recorded but
+# does NOT abort the rest. Prints a summary and exits non-zero on failure.
+# OS/apt/brew live in `my-update` (which also covers the codex + rtk brew casks);
+# run `my-update && my-update-ai` for the full sweep.
+# Note: restart claude & pilot afterwards for updates/plugins to take effect.
 
 # _ai_step <label> <bin> <cmd...> - skip when <bin> is absent, else run <cmd> and record.
 function _ai_step () {
@@ -54,39 +55,35 @@ function _ai_step () {
   fi
 }
 
-# Claude Code: refresh every marketplace, then every installed plugin (which also
+# Claude Code: refresh every marketplace, then each installed plugin (which also
 # pulls the skills/agents those plugins bundle). No native --all, so loop the list.
+# A dead/stale entry (plugin removed upstream) is reported but does NOT fail the
+# step - only a marketplace-refresh failure does.
 function _ai_update_claude_plugins () {
   claude plugin marketplace update || return 1
-  claude plugin list 2>/dev/null \
-    | grep -oE '[A-Za-z0-9._-]+@[A-Za-z0-9._-]+' | sort -u \
-    | xargs -rn1 claude plugin update
+  local p failed=()
+  while IFS= read -r p; do
+    [ -n "$p" ] || continue
+    claude plugin update "$p" || failed+=("$p")
+  done < <(claude plugin list 2>/dev/null | grep -oE '[A-Za-z0-9._-]+@[A-Za-z0-9._-]+' | sort -u)
+  [ ${#failed[@]} -eq 0 ] || printf '\033[2m   note: %d plugin(s) did not update: %s\033[0m\n' "${#failed[@]}" "${failed[*]}"
+  return 0
 }
-
-# agents-kit: update the sx binary, then re-fetch/install the vault assets.
-function _ai_update_sx () { sx update && sx install; }
-
-# uv: update uv itself, then upgrade all uv-installed tools.
-function _ai_update_uv () { uv self update && uv tool upgrade --all; }
 
 function my-update-ai () {
   local _ai_ok=() _ai_fail=() _ai_skip=()
 
-  # Host CLIs first: plugin/asset refreshes below run *through* these binaries
-  # (e.g. `claude plugin update`), so update the runtimes before what plugs in.
+  # CLI first (the plugin refresh below runs *through* it), then Pilot's meta-update,
+  # then the marketplace plugins Pilot does not manage (voltagent, ruby-skills, ...).
   _ai_step "Claude Code CLI"        claude claude update
-  _ai_step "Codex CLI"              codex  codex update
   _ai_step "Pilot"                  pilot  pilot update --yes
-  # Then extensions / assets that depend on the CLIs above.
   _ai_step "Claude plugins/skills"  claude _ai_update_claude_plugins
-  _ai_step "agents-kit (sx)"        sx     _ai_update_sx
-  _ai_step "uv (self + tools)"      uv     _ai_update_uv
 
   printf '\n\033[1m=== my-update-ai summary ===\033[0m\n'
   printf '\033[32mupdated:\033[0m %s\n' "${_ai_ok[*]:-none}"
   [ ${#_ai_skip[@]} -gt 0 ] && printf '\033[2mskipped:\033[0m %s\n' "${_ai_skip[*]}"
   [ ${#_ai_fail[@]} -gt 0 ] && printf '\033[31mfailed :\033[0m %s\n' "${_ai_fail[*]}"
-  printf '\033[2mReminder: restart claude/codex/pilot for self-updates to take effect.\033[0m\n'
+  printf '\033[2mReminder: restart claude & pilot for updates to take effect.\033[0m\n'
   return ${#_ai_fail[@]}
 }
 # ------------------------------------------------------------------------------
