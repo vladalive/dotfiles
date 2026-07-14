@@ -60,12 +60,15 @@ function _ai_step () {
 # A dead/stale entry (plugin removed upstream) is reported but does NOT fail the
 # step - only a marketplace-refresh failure does.
 function _ai_update_claude_plugins () {
-  claude plugin marketplace update || return 1
+  claude plugin marketplace update </dev/null || return 1
+  # Read the plugin list on FD 3 and give each update its own /dev/null stdin, so
+  # a plugin command can't consume the loop's input pipe and hang it (a `while
+  # read` loop must never share stdin with commands it runs).
   local p failed=()
-  while IFS= read -r p; do
+  while IFS= read -r p <&3; do
     [ -n "$p" ] || continue
-    claude plugin update "$p" || failed+=("$p")
-  done < <(claude plugin list 2>/dev/null | grep -oE '[A-Za-z0-9._-]+@[A-Za-z0-9._-]+' | sort -u)
+    claude plugin update "$p" </dev/null || failed+=("$p")
+  done 3< <(claude plugin list 2>/dev/null | grep -oE '[A-Za-z0-9._-]+@[A-Za-z0-9._-]+' | sort -u)
   [ ${#failed[@]} -eq 0 ] || printf '\033[2m   note: %d plugin(s) did not update: %s\033[0m\n' "${#failed[@]}" "${failed[*]}"
   return 0
 }
