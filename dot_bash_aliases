@@ -45,6 +45,22 @@ function my-update () {
 # uncapped, relying on the non-interactive-git guard to avoid the common hangs.
 _ai_timeout_bin () { command -v timeout 2>/dev/null || command -v gtimeout 2>/dev/null || true; }
 
+# Run a git-driven command so it can NEVER hang on auth: disable terminal prompts
+# AND any credential helper (e.g. WSL2's Git Credential Manager, which can block
+# on a Windows UI), batch-mode SSH, /dev/null stdin, and a timeout backstop when
+# available. Usage: _ai_run_git <seconds> <cmd...>
+_ai_run_git () {
+  local secs="$1"; shift
+  local tb; tb="$(_ai_timeout_bin)"
+  if [ -n "$tb" ]; then
+    GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0='' \
+      GIT_SSH_COMMAND='ssh -oBatchMode=yes -oConnectTimeout=10' "$tb" -k 5 "$secs" "$@" </dev/null
+  else
+    GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0='' \
+      GIT_SSH_COMMAND='ssh -oBatchMode=yes -oConnectTimeout=10' "$@" </dev/null
+  fi
+}
+
 function _ai_step () {
   local label="$1" bin="$2"; shift 2
   if ! command -v "$bin" >/dev/null 2>&1; then
@@ -81,32 +97,17 @@ function _ai_step () {
 # A dead/stale entry (plugin removed upstream) is reported but does NOT fail the
 # step - only a marketplace-refresh failure does.
 function _ai_update_claude_plugins () {
-  # Non-interactive git is the real hang fix: a marketplace whose `git pull` would
-  # prompt for credentials or an SSH host key now FAILS FAST instead of blocking
-  # forever (the #1 cross-machine hang). Portable - no timeout binary required.
-  # `</dev/null` on each call also stops it consuming the loop's stdin. A timeout
-  # (when available) is an extra backstop for network stalls.
-  local tb p plugins failed=()
-  tb="$(_ai_timeout_bin)"
-
-  if [ -n "$tb" ]; then
-    GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND='ssh -oBatchMode=yes -oConnectTimeout=10' "$tb" -k 5 120 claude plugin marketplace update </dev/null || return 1
-  else
-    GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND='ssh -oBatchMode=yes -oConnectTimeout=10' claude plugin marketplace update </dev/null || return 1
-  fi
-
-  # Capture the list, then iterate from a here-string (zsh/bash-safe; avoids the
-  # process-substitution + FD trick).
+  # git ops run via _ai_run_git: non-interactive (no prompt / no credential
+  # helper / batch SSH) so an auth-needing marketplace fails fast instead of
+  # hanging, plus a timeout backstop. Capture the plugin list then iterate from a
+  # here-string (zsh/bash-safe).
+  local p plugins failed=()
+  _ai_run_git 120 claude plugin marketplace update || return 1
   plugins="$(claude plugin list 2>/dev/null | grep -oE '[A-Za-z0-9._-]+@[A-Za-z0-9._-]+' | sort -u)"
   while IFS= read -r p; do
     [ -n "$p" ] || continue
-    if [ -n "$tb" ]; then
-      GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND='ssh -oBatchMode=yes -oConnectTimeout=10' "$tb" -k 5 90 claude plugin update "$p" </dev/null || failed+=("$p")
-    else
-      GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND='ssh -oBatchMode=yes -oConnectTimeout=10' claude plugin update "$p" </dev/null || failed+=("$p")
-    fi
+    _ai_run_git 90 claude plugin update "$p" || failed+=("$p")
   done <<< "$plugins"
-
   [ ${#failed[@]} -eq 0 ] || printf '\033[2m   note: %d plugin(s) did not update: %s\033[0m\n' "${#failed[@]}" "${failed[*]}"
   return 0
 }
