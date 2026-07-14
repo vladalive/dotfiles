@@ -28,6 +28,65 @@ function my-update () {
   brew upgrade -y &&
   brew cleanup
 }
+
+# --- AI tooling updater -------------------------------------------------------
+# my-update-ai: update the whole AI dev stack in one shot - Pilot, Claude Code
+# (CLI + its marketplaces/plugins/bundled skills), Codex, agents-kit/sx (binary +
+# vault assets), and uv (self + installed tools). Each tool is isolated: a missing
+# CLI is skipped, a failing update is recorded but does NOT abort the rest. Prints
+# a summary and exits non-zero if anything failed. OS/apt/brew updates live in
+# `my-update`; run `my-update && my-update-ai` to do both.
+# Note: CLI self-updates (claude/codex/pilot/sx) take effect after you restart them.
+
+# _ai_step <label> <bin> <cmd...> - skip when <bin> is absent, else run <cmd> and record.
+function _ai_step () {
+  local label="$1" bin="$2"; shift 2
+  if ! command -v "$bin" >/dev/null 2>&1; then
+    printf '\n\033[2m-- skip  %s (%s not installed)\033[0m\n' "$label" "$bin"
+    _ai_skip+=("$label"); return 0
+  fi
+  printf '\n\033[1m==> %s\033[0m\n' "$label"
+  if "$@"; then
+    _ai_ok+=("$label")
+  else
+    printf '\033[31mFAIL %s (continuing)\033[0m\n' "$label"
+    _ai_fail+=("$label")
+  fi
+}
+
+# Claude Code: refresh every marketplace, then every installed plugin (which also
+# pulls the skills/agents those plugins bundle). No native --all, so loop the list.
+function _ai_update_claude_plugins () {
+  claude plugin marketplace update || return 1
+  claude plugin list 2>/dev/null \
+    | grep -oE '[A-Za-z0-9._-]+@[A-Za-z0-9._-]+' | sort -u \
+    | xargs -rn1 claude plugin update
+}
+
+# agents-kit: update the sx binary, then re-fetch/install the vault assets.
+function _ai_update_sx () { sx update && sx install; }
+
+# uv: update uv itself, then upgrade all uv-installed tools.
+function _ai_update_uv () { uv self update && uv tool upgrade --all; }
+
+function my-update-ai () {
+  local _ai_ok=() _ai_fail=() _ai_skip=()
+
+  _ai_step "Pilot"                  pilot  pilot update --yes
+  _ai_step "Claude Code CLI"        claude claude update
+  _ai_step "Claude plugins/skills"  claude _ai_update_claude_plugins
+  _ai_step "Codex CLI"              codex  codex update
+  _ai_step "agents-kit (sx)"        sx     _ai_update_sx
+  _ai_step "uv (self + tools)"      uv     _ai_update_uv
+
+  printf '\n\033[1m=== my-update-ai summary ===\033[0m\n'
+  printf '\033[32mupdated:\033[0m %s\n' "${_ai_ok[*]:-none}"
+  [ ${#_ai_skip[@]} -gt 0 ] && printf '\033[2mskipped:\033[0m %s\n' "${_ai_skip[*]}"
+  [ ${#_ai_fail[@]} -gt 0 ] && printf '\033[31mfailed :\033[0m %s\n' "${_ai_fail[*]}"
+  printf '\033[2mReminder: restart claude/codex/pilot for self-updates to take effect.\033[0m\n'
+  return ${#_ai_fail[@]}
+}
+# ------------------------------------------------------------------------------
 alias reset-nul="sudo rm /dev/null && sudo mknod -m 0666 /dev/null c 1 3"
 alias my-pm-sleep-1="sudo sh /etc/acpi/sleep.sh force"
 alias my-pm-sleep-2="sudo pm-suspend"
