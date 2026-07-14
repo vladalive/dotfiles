@@ -30,8 +30,8 @@ function my-update () {
 }
 
 # --- AI tooling updater -------------------------------------------------------
-# my-update-ai: update the whole AI dev stack in one shot - Pilot, Claude Code
-# (CLI + its marketplaces/plugins/bundled skills), Codex, agents-kit/sx (binary +
+# my-update-ai: update the whole AI dev stack in one shot - Claude Code (CLI +
+# its marketplaces/plugins/bundled skills), Codex, Pilot, agents-kit/sx (binary +
 # vault assets), and uv (self + installed tools). Each tool is isolated: a missing
 # CLI is skipped, a failing update is recorded but does NOT abort the rest. Prints
 # a summary and exits non-zero if anything failed. OS/apt/brew updates live in
@@ -72,10 +72,13 @@ function _ai_update_uv () { uv self update && uv tool upgrade --all; }
 function my-update-ai () {
   local _ai_ok=() _ai_fail=() _ai_skip=()
 
-  _ai_step "Pilot"                  pilot  pilot update --yes
+  # Host CLIs first: plugin/asset refreshes below run *through* these binaries
+  # (e.g. `claude plugin update`), so update the runtimes before what plugs in.
   _ai_step "Claude Code CLI"        claude claude update
-  _ai_step "Claude plugins/skills"  claude _ai_update_claude_plugins
   _ai_step "Codex CLI"              codex  codex update
+  _ai_step "Pilot"                  pilot  pilot update --yes
+  # Then extensions / assets that depend on the CLIs above.
+  _ai_step "Claude plugins/skills"  claude _ai_update_claude_plugins
   _ai_step "agents-kit (sx)"        sx     _ai_update_sx
   _ai_step "uv (self + tools)"      uv     _ai_update_uv
 
