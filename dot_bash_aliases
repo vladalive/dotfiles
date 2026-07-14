@@ -40,6 +40,11 @@ function my-update () {
 # Note: restart claude & pilot afterwards for updates/plugins to take effect.
 
 # _ai_step <label> <bin> <cmd...> - skip when <bin> is absent, else run <cmd> and record.
+# A timeout binary if one exists: GNU `timeout` (Linux) or `gtimeout` (macOS +
+# coreutils). Empty when neither is present (plain macOS) - callers then run
+# uncapped, relying on the non-interactive-git guard to avoid the common hangs.
+_ai_timeout_bin () { command -v timeout 2>/dev/null || command -v gtimeout 2>/dev/null || true; }
+
 function _ai_step () {
   local label="$1" bin="$2"; shift 2
   if ! command -v "$bin" >/dev/null 2>&1; then
@@ -47,16 +52,22 @@ function _ai_step () {
     _ai_skip+=("$label"); return 0
   fi
   printf '\n\033[1m==> %s\033[0m\n' "$label"
-  # Cap each step so a wedged tool can never freeze the whole run. A shell
-  # function can't be wrapped by `timeout` (it self-guards internally); binaries
-  # get a generous ceiling (default 600s, override with CB_AI_STEP_TIMEOUT).
-  local limit="${CB_AI_STEP_TIMEOUT:-600}" rc
-  if [ "$(type -t "$1")" = "function" ]; then
-    "$@"; rc=$?
-  else
-    timeout -k 10 "$limit" "$@"; rc=$?
-    [ "$rc" -eq 124 ] && printf '\033[31mFAIL %s (timed out after %ss; continuing)\033[0m\n' "$label" "$limit"
-  fi
+  # Cap each step so a wedged tool can never freeze the whole run. Internal
+  # function steps (_ai_*) self-guard; binaries get a ceiling via timeout when a
+  # timeout binary is available (default 600s, override CB_AI_STEP_TIMEOUT).
+  local limit="${CB_AI_STEP_TIMEOUT:-600}" rc tb
+  tb="$(_ai_timeout_bin)"
+  case "$1" in
+    _ai_*)
+      "$@"; rc=$? ;;
+    *)
+      if [ -n "$tb" ]; then
+        "$tb" -k 10 "$limit" "$@"; rc=$?
+        [ "$rc" -eq 124 ] && printf '\033[31mFAIL %s (timed out after %ss; continuing)\033[0m\n' "$label" "$limit"
+      else
+        "$@"; rc=$?
+      fi ;;
+  esac
   if [ "$rc" -eq 0 ]; then
     _ai_ok+=("$label")
   else
@@ -70,16 +81,32 @@ function _ai_step () {
 # A dead/stale entry (plugin removed upstream) is reported but does NOT fail the
 # step - only a marketplace-refresh failure does.
 function _ai_update_claude_plugins () {
-  timeout -k 5 120 claude plugin marketplace update </dev/null || return 1
-  # Read the plugin list on FD 3 and give each update its own /dev/null stdin, so
-  # a plugin command can't consume the loop's input pipe and hang it (a `while
-  # read` loop must never share stdin with commands it runs). Each update is also
-  # time-capped so one wedged plugin is skipped, not fatal.
-  local p failed=()
-  while IFS= read -r p <&3; do
+  # Non-interactive git is the real hang fix: a marketplace whose `git pull` would
+  # prompt for credentials or an SSH host key now FAILS FAST instead of blocking
+  # forever (the #1 cross-machine hang). Portable - no timeout binary required.
+  # `</dev/null` on each call also stops it consuming the loop's stdin. A timeout
+  # (when available) is an extra backstop for network stalls.
+  local tb p plugins failed=()
+  tb="$(_ai_timeout_bin)"
+
+  if [ -n "$tb" ]; then
+    GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND='ssh -oBatchMode=yes -oConnectTimeout=10' "$tb" -k 5 120 claude plugin marketplace update </dev/null || return 1
+  else
+    GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND='ssh -oBatchMode=yes -oConnectTimeout=10' claude plugin marketplace update </dev/null || return 1
+  fi
+
+  # Capture the list, then iterate from a here-string (zsh/bash-safe; avoids the
+  # process-substitution + FD trick).
+  plugins="$(claude plugin list 2>/dev/null | grep -oE '[A-Za-z0-9._-]+@[A-Za-z0-9._-]+' | sort -u)"
+  while IFS= read -r p; do
     [ -n "$p" ] || continue
-    timeout -k 5 90 claude plugin update "$p" </dev/null || failed+=("$p")
-  done 3< <(claude plugin list 2>/dev/null | grep -oE '[A-Za-z0-9._-]+@[A-Za-z0-9._-]+' | sort -u)
+    if [ -n "$tb" ]; then
+      GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND='ssh -oBatchMode=yes -oConnectTimeout=10' "$tb" -k 5 90 claude plugin update "$p" </dev/null || failed+=("$p")
+    else
+      GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND='ssh -oBatchMode=yes -oConnectTimeout=10' claude plugin update "$p" </dev/null || failed+=("$p")
+    fi
+  done <<< "$plugins"
+
   [ ${#failed[@]} -eq 0 ] || printf '\033[2m   note: %d plugin(s) did not update: %s\033[0m\n' "${#failed[@]}" "${failed[*]}"
   return 0
 }
