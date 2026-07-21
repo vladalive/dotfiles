@@ -1,0 +1,32 @@
+# Make asdf-installed tools and Homebrew utilities available to every zsh,
+# including non-interactive Claude, Codex, SSH, and cron processes.
+typeset -U path PATH
+path=(
+  "$HOME/.asdf/shims"
+  "$HOME/.asdf/bin"
+  /home/linuxbrew/.linuxbrew/bin
+  $path
+)
+
+# Wire envs mutations into the current shell and load all stored values.
+if (( $+commands[envs] )); then
+  envs_executable="${commands[envs]}"
+  eval "$("$envs_executable" shell-init)"
+
+  if [[ -z ${_ENVS_ZSHENV_LOADED:-} ]]; then
+    envs_load_command=("$envs_executable" load)
+    if (( $+commands[flock] )); then
+      envs_load_command=(
+        flock --wait 10 "$HOME/.cache/envs-load.lock"
+        "$envs_executable" load
+      )
+    fi
+
+    if envs_exports="$("${envs_load_command[@]}")"; then
+      eval "$envs_exports"
+      export _ENVS_ZSHENV_LOADED=1
+    fi
+  fi
+
+  unset envs_executable envs_load_command envs_exports
+fi

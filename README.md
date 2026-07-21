@@ -24,6 +24,7 @@ Commonly used by the installed configuration:
 - `gpg`
 - `xclip`
 - `jq`, `curl`, `wget`, and `gh`
+- `envs` and `skate` for managed shell-variable loading
 - Ruby tooling such as `ruby`, `bundle`, `rubocop`, and `rspec`
 - Node 22 or newer for Copilot Neovim support
 
@@ -65,6 +66,9 @@ Common local files:
 - `$HOME/.bash_env` and `$HOME/.bash_keys` for local environment/secrets
 - `$HOME/.config/.chatgpt.key` for `ChatGPT.nvim`
 
+`dot_zshenv` contains only the `envs` loader. Stored environment values
+remain in the local Skate `@env` database and must not be added to this repo.
+
 Use `chezmoi diff` to inspect live drift. Use `chezmoi add <target>` or
 `chezmoi re-add` only after reviewing the diff and deciding the live change
 belongs in git.
@@ -74,7 +78,7 @@ belongs in git.
 Run focused checks for touched areas:
 
 ```bash
-zsh -n dot_zshrc
+zsh -n dot_zshenv dot_zshrc
 bash -n dot_bashrc dot_bash_profile dot_bash_aliases
 git config --file dot_gitconfig --list >/dev/null
 git submodule status --recursive

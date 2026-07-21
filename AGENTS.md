@@ -29,6 +29,7 @@ Expected by commonly used configs:
 - `gpg`, `gpgconf`, and `gpg-connect-agent` for signing helpers
 - `xclip` for clipboard aliases and tmux copy-mode integration
 - `jq`, `curl`, `wget`, and `gh` for shell helper functions
+- `envs` and `skate` for managed shell-variable loading
 - `ruby`, `bundle`, `rubocop`, and `rspec` for Ruby helpers
 - `node` 22 or newer for Copilot Neovim support
 - `make` for native Neovim plugin builds where applicable
@@ -85,9 +86,12 @@ Shell config is intentionally shared where practical. `zshrc`, `bashrc`, and
 `bash_profile` may all source local files, so guard additions against duplicate
 loading when needed.
 
+`dot_zshenv` contains only the `envs` loader. Stored environment values
+remain in the local Skate `@env` database and must not be added to this repo.
+
 ## Development
 
-Prefer changing chezmoi source-state files such as `dot_zshrc`,
+Prefer changing chezmoi source-state files such as `dot_zshenv`, `dot_zshrc`,
 `dot_gitconfig`, and `private_dot_config/nvim/init.lua`.
 
 Do not edit dependency or vendored code under `files/janus/` unless the task is
@@ -111,7 +115,7 @@ Run focused checks for the area touched.
 Shell:
 
 ```bash
-zsh -n dot_zshrc
+zsh -n dot_zshenv dot_zshrc
 bash -n dot_bashrc dot_bash_profile dot_bash_aliases
 ```
 
