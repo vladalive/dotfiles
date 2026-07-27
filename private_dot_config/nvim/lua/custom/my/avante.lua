@@ -71,14 +71,18 @@ return {
             -- max_tokens = 4096,
           },
         },
-        -- MiniMax over its OpenAI-compatible route. MINIMAX_API_KEY comes from
-        -- `envs`, so nvim launched from a shell already has it.
+        -- MiniMax over its OpenAI-compatible route.
         -- No reasoning_split here on purpose: avante strips <think> itself via
         -- Utils.trim_think_content in both llm.lua and suggestion.lua, so the
         -- default response shape is already handled and needs no extra body.
         minimax = {
           __inherited_from = 'openai',
           endpoint = 'https://api.minimax.io/v1',
+          -- Plain env var, not cmd:. MINIMAX_API_KEY is exported by `envs load`
+          -- in ~/.zshenv, which runs for every zsh including non-interactive.
+          -- A `cmd:envs get ...` form was tried and is strictly worse: the asdf
+          -- shim cannot resolve `asdf` outside a full shell, so it fails in
+          -- exactly the bare-environment case it was meant to cover.
           api_key_name = 'MINIMAX_API_KEY',
           model = 'MiniMax-M3',
           timeout = 60000,
@@ -91,6 +95,11 @@ return {
         minimax_fast = {
           __inherited_from = 'openai',
           endpoint = 'https://api.minimax.io/v1',
+          -- Plain env var, not cmd:. MINIMAX_API_KEY is exported by `envs load`
+          -- in ~/.zshenv, which runs for every zsh including non-interactive.
+          -- A `cmd:envs get ...` form was tried and is strictly worse: the asdf
+          -- shim cannot resolve `asdf` outside a full shell, so it fails in
+          -- exactly the bare-environment case it was meant to cover.
           api_key_name = 'MINIMAX_API_KEY',
           model = 'MiniMax-M2.7-highspeed',
           timeout = 30000,
