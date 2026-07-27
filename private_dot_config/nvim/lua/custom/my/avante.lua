@@ -32,8 +32,13 @@ return {
         auto_apply_diff_after_generation = true,
       },
       -- provider = 'ollama',
-      provider = 'copilot',
+      -- provider = 'copilot',
       -- provider = "openrouter",
+      provider = 'minimax',
+      -- auto_suggestions fires on every pause, so it gets the fast model rather
+      -- than M3. avante warns this path is request-heavy; on a shared MiniMax
+      -- quota that matters. Raise suggestion.debounce if it still runs hot.
+      auto_suggestions_provider = 'minimax_fast',
       providers = {
         ollama = {
           endpoint = 'http://localhost:11435',
@@ -46,6 +51,33 @@ return {
           -- model = 'gpt-4-0125-preview',
           extra_request_body = {
             -- max_tokens = 4096,
+          },
+        },
+        -- MiniMax over its OpenAI-compatible route. MINIMAX_API_KEY comes from
+        -- `envs`, so nvim launched from a shell already has it.
+        -- No reasoning_split here on purpose: avante strips <think> itself via
+        -- Utils.trim_think_content in both llm.lua and suggestion.lua, so the
+        -- default response shape is already handled and needs no extra body.
+        minimax = {
+          __inherited_from = 'openai',
+          endpoint = 'https://api.minimax.io/v1',
+          api_key_name = 'MINIMAX_API_KEY',
+          model = 'MiniMax-M3',
+          timeout = 60000,
+          extra_request_body = {
+            max_tokens = 8192,
+          },
+        },
+        -- Same endpoint, faster model. Used for auto_suggestions only:
+        -- M3 averaged ~8.4s versus ~4.2s for M2.7-highspeed on short prompts.
+        minimax_fast = {
+          __inherited_from = 'openai',
+          endpoint = 'https://api.minimax.io/v1',
+          api_key_name = 'MINIMAX_API_KEY',
+          model = 'MiniMax-M2.7-highspeed',
+          timeout = 30000,
+          extra_request_body = {
+            max_tokens = 2048,
           },
         },
         openrouter = {
