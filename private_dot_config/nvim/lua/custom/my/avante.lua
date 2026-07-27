@@ -20,6 +20,24 @@ return {
     'AvanteRefresh',
     'AvanteToggle',
   },
+  -- avante registers its <leader>a* mappings during setup(), which only runs
+  -- once the plugin loads. With `cmd` as the sole lazy trigger the keys did
+  -- nothing until an :Avante* command had been run at least once. These entries
+  -- give lazy.nvim key triggers so the first press loads the plugin and then
+  -- replays the key; the real mappings still come from avante's own defaults.
+  keys = {
+    { '<leader>aa', desc = 'avante: ask', mode = { 'n', 'v' } },
+    { '<leader>ae', desc = 'avante: edit', mode = 'v' },
+    { '<leader>an', desc = 'avante: new ask', mode = { 'n', 'v' } },
+    { '<leader>at', desc = 'avante: toggle', mode = 'n' },
+    { '<leader>af', desc = 'avante: focus', mode = 'n' },
+    { '<leader>ar', desc = 'avante: refresh', mode = 'n' },
+    { '<leader>aS', desc = 'avante: stop', mode = 'n' },
+    { '<leader>as', desc = 'avante: toggle suggestion', mode = 'n' },
+    { '<leader>az', desc = 'avante: zen mode', mode = { 'n', 'v' } },
+    { '<leader>ah', desc = 'avante: history', mode = 'n' },
+    { '<leader>a?', desc = 'avante: select model', mode = 'n' },
+  },
   -- opts = {
   -- },
   config = function()
