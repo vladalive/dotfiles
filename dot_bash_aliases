@@ -441,4 +441,43 @@ function gh-failed () {
   gh run view --log-failed --job="$JOB_ID" | grep-gh-run-errors-ruby
 }
 
-alias '=' >/dev/null 2>&1 && unalias '='
+unalias '=' 2>/dev/null || true
+
+# Agent command wrappers. The default providers stay unchanged; `*-mm` opts a
+# single invocation into MiniMax using the key managed locally by `envs`.
+function claude {
+  local _sid="$$-$RANDOM"
+  PILOT_SESSION_ID="$_sid" CLAUDE_CODE_TASK_LIST_ID="pilot-$_sid" command claude "$@"
+}
+
+function codex {
+  PILOT_SESSION_ID="$$-$RANDOM" command codex "$@"
+}
+
+function claude-mm {
+  local _sid _key
+  _key="${MINIMAX_API_KEY:-$(envs get MINIMAX_API_KEY 2>/dev/null)}"
+  [ -n "$_key" ] || {
+    echo "claude-mm: MINIMAX_API_KEY not found (envs set MINIMAX_API_KEY ...)" >&2
+    return 1
+  }
+  _sid="$$-$RANDOM"
+  PILOT_SESSION_ID="$_sid" \
+  CLAUDE_CODE_TASK_LIST_ID="pilot-$_sid" \
+  ANTHROPIC_BASE_URL="https://api.minimax.io/anthropic" \
+  ANTHROPIC_AUTH_TOKEN="$_key" \
+  ANTHROPIC_MODEL="MiniMax-M3" \
+  ANTHROPIC_SMALL_FAST_MODEL="MiniMax-M3" \
+    command claude "$@"
+}
+
+function codex-mm {
+  local _key
+  _key="${MINIMAX_API_KEY:-$(envs get MINIMAX_API_KEY 2>/dev/null)}"
+  [ -n "$_key" ] || {
+    echo "codex-mm: MINIMAX_API_KEY not found (envs set MINIMAX_API_KEY ...)" >&2
+    return 1
+  }
+  MINIMAX_API_KEY="$_key" PILOT_SESSION_ID="$$-$RANDOM" \
+    command codex -p minimax "$@"
+}

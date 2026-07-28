@@ -98,18 +98,3 @@ fi
 export PATH="$HOME/.pilot/bin:$HOME/.bun/bin:$PATH"
 alias pilot="$HOME/.pilot/bin/pilot"
 alias ccp="$HOME/.pilot/bin/pilot"
-claude() { local _sid="$$-$RANDOM"; PILOT_SESSION_ID=$_sid CLAUDE_CODE_TASK_LIST_ID="pilot-$_sid" command claude "$@"; }
-codex() { PILOT_SESSION_ID="$$-$RANDOM" command codex "$@"; }
-
-# Codex against MiniMax M3. The profile is managed as
-# ~/.codex/minimax.config.toml and leaves the default Codex provider untouched.
-codex-mm() {
-  local _key
-  _key="${MINIMAX_API_KEY:-$(envs get MINIMAX_API_KEY 2>/dev/null)}"
-  [ -n "$_key" ] || {
-    echo "codex-mm: MINIMAX_API_KEY not found (envs set MINIMAX_API_KEY ...)" >&2
-    return 1
-  }
-  MINIMAX_API_KEY="$_key" PILOT_SESSION_ID="$$-$RANDOM" \
-    command codex -p minimax "$@"
-}
