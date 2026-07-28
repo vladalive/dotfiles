@@ -96,5 +96,3 @@ fi
 
 # Pilot Shell
 export PATH="$HOME/.pilot/bin:$HOME/.bun/bin:$PATH"
-alias pilot="$HOME/.pilot/bin/pilot"
-alias ccp="$HOME/.pilot/bin/pilot"
