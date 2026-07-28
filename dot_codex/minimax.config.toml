@@ -1,0 +1,23 @@
+# Codex profile: MiniMax M3. Layered over ~/.codex/config.toml via `codex -p minimax`
+# (or the `codex-mm` shell function). The base config is untouched and still uses
+# the default provider.
+#
+# Codex does not support `wire_api = "chat"`, so this uses MiniMax's Responses API.
+# That route returns reasoning in its own field, so no reasoning-split workaround
+# is required.
+#
+# `/model` will not list MiniMax models because its model manager expects a
+# different response shape. Pick a model with `-m`, for example:
+#
+#   codex-mm -m MiniMax-M2.7
+#
+# Available: MiniMax-M3, MiniMax-M2.7, MiniMax-M2.7-highspeed, MiniMax-M2.5,
+# MiniMax-M2.5-highspeed, MiniMax-M2.1, MiniMax-M2.1-highspeed, and MiniMax-M2.
+model = "MiniMax-M3"
+model_provider = "minimax"
+
+[model_providers.minimax]
+name = "MiniMax"
+base_url = "https://api.minimax.io/v1"
+env_key = "MINIMAX_API_KEY"
+wire_api = "responses"
