@@ -149,7 +149,16 @@ function codex {
 }
 
 function claude-mm {
-  local _sid _key
+  local _sid _key _model
+  _model="MiniMax-M3"
+  if [ "$1" = "-m" ]; then
+    [ -n "$2" ] || {
+      echo "claude-mm: -m requires a MiniMax model name" >&2
+      return 2
+    }
+    _model="$2"
+    shift 2
+  fi
   _key="${MINIMAX_API_KEY:-$(envs get MINIMAX_API_KEY 2>/dev/null)}"
   [ -n "$_key" ] || {
     echo "claude-mm: MINIMAX_API_KEY not found (envs set MINIMAX_API_KEY ...)" >&2
@@ -160,8 +169,8 @@ function claude-mm {
   CLAUDE_CODE_TASK_LIST_ID="pilot-$_sid" \
   ANTHROPIC_BASE_URL="https://api.minimax.io/anthropic" \
   ANTHROPIC_AUTH_TOKEN="$_key" \
-  ANTHROPIC_MODEL="MiniMax-M3" \
-  ANTHROPIC_SMALL_FAST_MODEL="MiniMax-M3" \
+  ANTHROPIC_MODEL="$_model" \
+  ANTHROPIC_SMALL_FAST_MODEL="$_model" \
     command claude "$@"
 }
 
