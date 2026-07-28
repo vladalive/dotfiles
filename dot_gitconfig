@@ -378,6 +378,8 @@
   defaultBranch = master
 
 [include]
+  # `git gpg-signingkey-local` writes this host's secret-key ID here; keep the
+  # file untracked so each machine can choose its own signing key.
   path = ~/.gitconfig.local
 [safe]
   directory = /workspace
