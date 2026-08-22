@@ -8,5 +8,4 @@ if [ -z "${DOTFILES_SHELL_LOCAL_SOURCED:-}" ] && [ -s "$HOME/.shell.local" ]; th
   source "$HOME/.shell.local"
 fi
 
-# Pilot Shell
-export PATH="$HOME/.pilot/bin:$HOME/.bun/bin:$PATH"
+export PATH="$HOME/.bun/bin:$PATH"

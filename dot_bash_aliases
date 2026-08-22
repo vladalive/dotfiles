@@ -33,14 +33,14 @@ function my-update () {
 }
 
 # --- AI tooling updater -------------------------------------------------------
-# my-update-ai: update the AI dev stack in one shot - Claude Code (CLI +
-# marketplaces/plugins/bundled skills) and Pilot, which itself cascades updates to
-# RTK, CodeGraph, the LSP/Chrome-DevTools plugins, and the Codex integration.
+# my-update-ai: update the AI dev stack in one shot - the Claude Code CLI plus its
+# marketplaces, plugins and bundled skills. RTK, CodeGraph and Semble update
+# through their own package managers (brew, npm, uv), see the host-upkeep skill.
 # Each tool is isolated: a missing CLI is skipped, a failing step is recorded but
 # does NOT abort the rest. Prints a summary and exits non-zero on failure.
 # OS/apt/brew live in `my-update` (which also covers the codex + rtk brew casks);
 # run `my-update && my-update-ai` for the full sweep.
-# Note: restart claude & pilot afterwards for updates/plugins to take effect.
+# Note: restart claude afterwards for updates/plugins to take effect.
 
 # _ai_step <label> <bin> <cmd...> - skip when <bin> is absent, else run <cmd> and record.
 # A timeout binary if one exists: GNU `timeout` (Linux) or `gtimeout` (macOS +
@@ -118,17 +118,15 @@ function _ai_update_claude_plugins () {
 function my-update-ai () {
   local _ai_ok=() _ai_fail=() _ai_skip=()
 
-  # CLI first (the plugin refresh below runs *through* it), then Pilot's meta-update,
-  # then the marketplace plugins Pilot does not manage (voltagent, ruby-skills, ...).
+  # CLI first - the plugin refresh below runs *through* it.
   _ai_step "Claude Code CLI"        claude claude update
-  _ai_step "Pilot"                  pilot  pilot update --yes
   _ai_step "Claude plugins/skills"  claude _ai_update_claude_plugins
 
   printf '\n\033[1m=== my-update-ai summary ===\033[0m\n'
   printf '\033[32mupdated:\033[0m %s\n' "${_ai_ok[*]:-none}"
   [ ${#_ai_skip[@]} -gt 0 ] && printf '\033[2mskipped:\033[0m %s\n' "${_ai_skip[*]}"
   [ ${#_ai_fail[@]} -gt 0 ] && printf '\033[31mfailed :\033[0m %s\n' "${_ai_fail[*]}"
-  printf '\033[2mReminder: restart claude & pilot for updates to take effect.\033[0m\n'
+  printf '\033[2mReminder: restart claude for updates to take effect.\033[0m\n'
   return ${#_ai_fail[@]}
 }
 # ------------------------------------------------------------------------------
@@ -136,16 +134,13 @@ function my-update-ai () {
 # --- Agent command wrappers ---------------------------------------------------
 # The default providers stay unchanged; `*-mm` opts a single invocation into
 # MiniMax using the key managed locally by `envs`.
-alias pilot="$HOME/.pilot/bin/pilot"
-alias ccp="$HOME/.pilot/bin/pilot"
-
 function claude {
   local _sid="$$-$RANDOM"
-  PILOT_SESSION_ID="$_sid" CLAUDE_CODE_TASK_LIST_ID="pilot-$_sid" command claude "$@"
+  CLAUDE_CODE_TASK_LIST_ID="cc-$_sid" command claude "$@"
 }
 
 function codex {
-  PILOT_SESSION_ID="$$-$RANDOM" command codex "$@"
+  command codex "$@"
 }
 
 function claude-mm {
@@ -165,8 +160,7 @@ function claude-mm {
     return 1
   }
   _sid="$$-$RANDOM"
-  PILOT_SESSION_ID="$_sid" \
-  CLAUDE_CODE_TASK_LIST_ID="pilot-$_sid" \
+  CLAUDE_CODE_TASK_LIST_ID="cc-$_sid" \
   ANTHROPIC_BASE_URL="https://api.minimax.io/anthropic" \
   ANTHROPIC_AUTH_TOKEN="$_key" \
   ANTHROPIC_MODEL="$_model" \
@@ -181,7 +175,7 @@ function codex-mm {
     echo "codex-mm: MINIMAX_API_KEY not found (envs set MINIMAX_API_KEY ...)" >&2
     return 1
   }
-  MINIMAX_API_KEY="$_key" PILOT_SESSION_ID="$$-$RANDOM" \
+  MINIMAX_API_KEY="$_key" \
     command codex -p minimax "$@"
 }
 
