@@ -170,92 +170,7 @@
   branch-upstream = "!f() { \
     git branch --show-current | xargs -r -I{} sh -c 'git branch -u origin/$1' -- {} ;\
   }; f"
-  branch-remove-merged = "!f() { \
-    IGNORED_BRANCHES='master|main|develop|deploy|production|staging|qa'; \
-    DRY_RUN=0 ;\
-    if [ \"$1\" = '--dry-run' ]; then \
-      DRY_RUN=1 ;\
-      shift ;\
-    fi ;\
-    CURRENT_BRANCH=$(git branch --show-current) ;\
-    FOUND_BRANCHES=0 ;\
-    REMOVED_BRANCHES=0 ;\
-    REMOVED_WORKTREES=0 ;\
-    SKIPPED_BRANCHES=0 ;\
-    for BRANCH in $(git for-each-ref --format='%(refname:short)' refs/heads --merged); do \
-      if echo \"$BRANCH\" | grep -Eq \"^($IGNORED_BRANCHES)$\" || [ \"$BRANCH\" = \"$CURRENT_BRANCH\" ]; then \
-        continue ;\
-      fi ;\
-      git merge-base --is-ancestor \"$BRANCH\" HEAD || continue ;\
-      FOUND_BRANCHES=1 ;\
-      WORKTREE_COUNT=0 ;\
-      WORKTREES=$(git worktree list --porcelain | awk -v branch=\"refs/heads/$BRANCH\" 'BEGIN { path = \"\" } /^worktree / { path = substr($0, 10) } /^branch / { if ($2 == branch) print path }') ;\
-      if [ -n \"$WORKTREES\" ]; then \
-        echo \"$WORKTREES\" | while read -r WORKTREE; do \
-          [ -z \"$WORKTREE\" ] && continue ;\
-          if [ -n \"$(git -C \"$WORKTREE\" status --porcelain)\" ]; then \
-            echo \"Skipping $BRANCH: worktree has modified or untracked files\" ;\
-            echo \"  $WORKTREE\" ;\
-            git -C \"$WORKTREE\" status --short ;\
-            exit 2 ;\
-          fi ;\
-        done ;\
-        STATUS=$? ;\
-        if [ \"$STATUS\" -eq 2 ]; then \
-          SKIPPED_BRANCHES=$((SKIPPED_BRANCHES + 1)) ;\
-          continue ;\
-        elif [ \"$STATUS\" -ne 0 ]; then \
-          exit 1 ;\
-        fi ;\
-        echo \"$WORKTREES\" | while read -r WORKTREE; do \
-          [ -z \"$WORKTREE\" ] && continue ;\
-          if [ \"$DRY_RUN\" -eq 1 ]; then \
-            : ;\
-          else \
-            git worktree remove \"$WORKTREE\" || exit 1 ;\
-          fi ;\
-        done || exit 1 ;\
-        WORKTREE_COUNT=$(echo \"$WORKTREES\" | sed '/^$/d' | wc -l | tr -d ' ') ;\
-      fi ;\
-      WORKTREE_LABEL=worktree ;\
-      [ \"$WORKTREE_COUNT\" -eq 1 ] || WORKTREE_LABEL=worktrees ;\
-      if [ \"$DRY_RUN\" -eq 1 ]; then \
-        if [ \"$WORKTREE_COUNT\" -gt 0 ]; then \
-          echo \"Would remove $BRANCH (and $WORKTREE_COUNT $WORKTREE_LABEL)\" ;\
-          echo \"$WORKTREES\" | sed '/^$/d; s/^/  /' ;\
-        else \
-          echo \"Would remove $BRANCH\" ;\
-        fi ;\
-      else \
-        git branch -D \"$BRANCH\" >/dev/null || exit 1 ;\
-        if [ \"$WORKTREE_COUNT\" -gt 0 ]; then \
-          echo \"Removed $BRANCH (and $WORKTREE_COUNT $WORKTREE_LABEL)\" ;\
-        else \
-          echo \"Removed $BRANCH\" ;\
-        fi ;\
-      fi ;\
-      REMOVED_BRANCHES=$((REMOVED_BRANCHES + 1)) ;\
-      REMOVED_WORKTREES=$((REMOVED_WORKTREES + WORKTREE_COUNT)) ;\
-    done ;\
-    if [ \"$FOUND_BRANCHES\" -eq 1 ]; then \
-      BRANCH_LABEL=branch ;\
-      [ \"$REMOVED_BRANCHES\" -eq 1 ] || BRANCH_LABEL=branches ;\
-      WORKTREE_LABEL=worktree ;\
-      [ \"$REMOVED_WORKTREES\" -eq 1 ] || WORKTREE_LABEL=worktrees ;\
-      if [ \"$DRY_RUN\" -eq 1 ]; then \
-        echo \"Would remove $REMOVED_BRANCHES merged $BRANCH_LABEL and $REMOVED_WORKTREES $WORKTREE_LABEL.\" ;\
-      else \
-        echo \"Removed $REMOVED_BRANCHES merged $BRANCH_LABEL and $REMOVED_WORKTREES $WORKTREE_LABEL.\" ;\
-      fi ;\
-      if [ \"$SKIPPED_BRANCHES\" -gt 0 ]; then \
-        SKIPPED_LABEL=branch ;\
-        [ \"$SKIPPED_BRANCHES\" -eq 1 ] || SKIPPED_LABEL=branches ;\
-        echo \"Skipped $SKIPPED_BRANCHES merged $SKIPPED_LABEL with dirty worktrees.\" ;\
-      fi ;\
-    else \
-      echo 'No merged branches to remove.' ;\
-    fi ;\
-  }; f"
+	branch-remove-merged = "!f() {\n  IGNORED_BRANCHES='master|main|develop|deploy|production|staging|qa'\n  DRY_RUN=0\n  if [ \"$1\" = '--dry-run' ]; then\n    DRY_RUN=1\n    shift\n  fi\n  CURRENT_BRANCH=$(git branch --show-current)\n  FOUND_BRANCHES=0\n  REMOVED_BRANCHES=0\n  REMOVED_WORKTREES=0\n  SKIPPED_BRANCHES=0\n\n  worktree_has_live_process() {\n    WT=\"$1\"\n    for cwd_link in /proc/[0-9]*/cwd; do\n      [ -e \"$cwd_link\" ] || continue\n      RESOLVED=$(readlink -f \"$cwd_link\" 2>/dev/null) || continue\n      case \"$RESOLVED\" in\n        \"$WT\"|\"$WT\"/*) return 0 ;;\n      esac\n    done\n    return 1\n  }\n\n  branch_has_own_commits() {\n    git reflog show \"$1\" 2>/dev/null | grep -q ': commit'\n  }\n\n  for BRANCH in $(git for-each-ref --format='%(refname:short)' refs/heads --merged); do\n    if echo \"$BRANCH\" | grep -Eq \"^($IGNORED_BRANCHES)$\" || [ \"$BRANCH\" = \"$CURRENT_BRANCH\" ]; then\n      continue\n    fi\n    git merge-base --is-ancestor \"$BRANCH\" HEAD || continue\n    FOUND_BRANCHES=1\n\n    if ! branch_has_own_commits \"$BRANCH\"; then\n      echo \"Skipping $BRANCH: no commits of its own yet (still fresh/claimed)\"\n      SKIPPED_BRANCHES=$((SKIPPED_BRANCHES + 1))\n      continue\n    fi\n\n    WORKTREE_COUNT=0\n    WORKTREES=$(git worktree list --porcelain | awk -v branch=\"refs/heads/$BRANCH\" 'BEGIN { path = \"\" } /^worktree / { path = substr($0, 10) } /^branch / { if ($2 == branch) print path }')\n    if [ -n \"$WORKTREES\" ]; then\n      echo \"$WORKTREES\" | while read -r WORKTREE; do\n        [ -z \"$WORKTREE\" ] && continue\n        if [ -n \"$(git -C \"$WORKTREE\" status --porcelain)\" ]; then\n          echo \"Skipping $BRANCH: worktree has modified or untracked files\"\n          echo \"  $WORKTREE\"\n          git -C \"$WORKTREE\" status --short\n          exit 2\n        fi\n        if worktree_has_live_process \"$WORKTREE\"; then\n          echo \"Skipping $BRANCH: a live process has its cwd inside the worktree\"\n          echo \"  $WORKTREE\"\n          exit 3\n        fi\n      done\n      STATUS=$?\n      if [ \"$STATUS\" -eq 2 ] || [ \"$STATUS\" -eq 3 ]; then\n        SKIPPED_BRANCHES=$((SKIPPED_BRANCHES + 1))\n        continue\n      elif [ \"$STATUS\" -ne 0 ]; then\n        exit 1\n      fi\n      echo \"$WORKTREES\" | while read -r WORKTREE; do\n        [ -z \"$WORKTREE\" ] && continue\n        if [ \"$DRY_RUN\" -eq 1 ]; then\n          :\n        else\n          git worktree remove \"$WORKTREE\" || exit 1\n        fi\n      done || exit 1\n      WORKTREE_COUNT=$(echo \"$WORKTREES\" | sed '/^$/d' | wc -l | tr -d ' ')\n    fi\n    WORKTREE_LABEL=worktree\n    [ \"$WORKTREE_COUNT\" -eq 1 ] || WORKTREE_LABEL=worktrees\n    if [ \"$DRY_RUN\" -eq 1 ]; then\n      if [ \"$WORKTREE_COUNT\" -gt 0 ]; then\n        echo \"Would remove $BRANCH (and $WORKTREE_COUNT $WORKTREE_LABEL)\"\n        echo \"$WORKTREES\" | sed '/^$/d; s/^/  /'\n      else\n        echo \"Would remove $BRANCH\"\n      fi\n    else\n      git branch -D \"$BRANCH\" >/dev/null || exit 1\n      if [ \"$WORKTREE_COUNT\" -gt 0 ]; then\n        echo \"Removed $BRANCH (and $WORKTREE_COUNT $WORKTREE_LABEL)\"\n      else\n        echo \"Removed $BRANCH\"\n      fi\n    fi\n    REMOVED_BRANCHES=$((REMOVED_BRANCHES + 1))\n    REMOVED_WORKTREES=$((REMOVED_WORKTREES + WORKTREE_COUNT))\n  done\n\n  if [ \"$FOUND_BRANCHES\" -eq 1 ]; then\n    BRANCH_LABEL=branch\n    [ \"$REMOVED_BRANCHES\" -eq 1 ] || BRANCH_LABEL=branches\n    WORKTREE_LABEL=worktree\n    [ \"$REMOVED_WORKTREES\" -eq 1 ] || WORKTREE_LABEL=worktrees\n    if [ \"$DRY_RUN\" -eq 1 ]; then\n      echo \"Would remove $REMOVED_BRANCHES merged $BRANCH_LABEL and $REMOVED_WORKTREES $WORKTREE_LABEL.\"\n    else\n      echo \"Removed $REMOVED_BRANCHES merged $BRANCH_LABEL and $REMOVED_WORKTREES $WORKTREE_LABEL.\"\n    fi\n    if [ \"$SKIPPED_BRANCHES\" -gt 0 ]; then\n      SKIPPED_LABEL=branch\n      [ \"$SKIPPED_BRANCHES\" -eq 1 ] || SKIPPED_LABEL=branches\n      echo \"Skipped $SKIPPED_BRANCHES merged $SKIPPED_LABEL with dirty worktrees, live processes, or no commits of their own.\"\n    fi\n  else\n    echo 'No merged branches to remove.'\n  fi\n}; f"
   branch-remove-merged-remote = "!f() { \
     REMOTE=\"${1:-origin}\" ;\
     IGNORED_BRANCHES='master|main|develop|deploy|production|staging|qa|backup' ;\
@@ -383,3 +298,9 @@
   path = ~/.gitconfig.local
 [safe]
   directory = /workspace
+[credential "https://github.com"]
+	helper = 
+	helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
