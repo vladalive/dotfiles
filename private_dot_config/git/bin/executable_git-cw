@@ -1,0 +1,23 @@
+#!/bin/sh
+# git cw <branch>
+#
+# "checkout or worktree": if <branch> is already checked out in a worktree,
+# print that worktree's path and stop - you cannot check the branch out twice,
+# and what you actually wanted was to go there. Anything else is a plain
+# `git checkout` passthrough.
+set -eu
+
+if [ "$#" -eq 1 ]; then
+  branch="${1#refs/heads/}"
+  worktree=$(git worktree list --porcelain |
+    awk -v branch="refs/heads/$branch" '
+      /^worktree / { path = substr($0, 10) }
+      /^branch / && $2 == branch { print path; exit }
+    ')
+  if [ -n "$worktree" ]; then
+    printf '%s\n' "$worktree"
+    exit 0
+  fi
+fi
+
+exec git checkout "$@"

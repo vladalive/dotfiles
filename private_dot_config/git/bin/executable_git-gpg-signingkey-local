@@ -1,0 +1,17 @@
+#!/bin/sh
+# git gpg-signingkey-local
+#
+# Record this host's first GPG secret key as the signing key, in the untracked
+# ~/.gitconfig.local, so the key id never reaches the dotfiles repository.
+set -eu
+
+key=$(gpg --list-secret-keys --keyid-format=long |
+  awk '/^sec/ { sub(/^.*\//, "", $2); print $2; exit }')
+
+if [ -z "$key" ]; then
+  echo "No GPG secret key found" >&2
+  exit 1
+fi
+
+git config --file "$HOME/.gitconfig.local" user.signingkey "$key"
+echo "Configured ~/.gitconfig.local user.signingkey=$key"

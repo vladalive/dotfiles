@@ -1,0 +1,8 @@
+#!/bin/sh
+# git assume-unchanged-files
+#
+# List the paths currently flagged --assume-unchanged, which `git status` will
+# not mention no matter how modified they are.
+set -eu
+
+git ls-files -v | sed -n 's/^h //p'

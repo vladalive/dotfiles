@@ -1,0 +1,14 @@
+#!/bin/sh
+# git branch-upstream
+#
+# Point the current branch at origin/<same name>.
+set -eu
+
+branch=$(git branch --show-current)
+
+if [ -z "$branch" ]; then
+  echo "branch-upstream: detached HEAD, no branch to track" >&2
+  exit 1
+fi
+
+exec git branch -u "origin/$branch"

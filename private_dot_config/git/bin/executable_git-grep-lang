@@ -1,0 +1,29 @@
+#!/bin/sh
+# git grep-lang <ruby|html|css|js> <pattern> [git grep args...]
+#
+# One script behind the four grep-<lang> aliases: the only thing that differed
+# between them was the pathspec.
+set -eu
+
+usage() {
+  echo "usage: git grep-lang <ruby|html|css|js> <pattern> [git grep args...]" >&2
+  exit 1
+}
+
+[ "$#" -ge 2 ] || usage
+
+lang="$1"
+shift
+
+case "$lang" in
+  ruby) set -- "$@" -- '*.rb' ;;
+  html) set -- "$@" -- '*.html' '*.haml' '*.jade' '*.pug' '*.vue' ;;
+  css)  set -- "$@" -- '*.css' '*.scss' '*.sass' '*.styl' '*.less' ;;
+  js)   set -- "$@" -- '*.js' '*.coffee' '*.ts' ;;
+  *)
+    echo "grep-lang: unknown language '$lang'" >&2
+    usage
+    ;;
+esac
+
+exec git grep "$@"

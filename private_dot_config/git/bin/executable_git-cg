@@ -1,0 +1,30 @@
+#!/bin/sh
+# git cg [pattern]
+#
+# "checkout by grep": check out the first local branch whose name matches
+# <pattern> (default: master), skipping the branch already checked out.
+#
+# The version that lived in the config was corrupted - git had eaten the quotes
+# around the awk program and the test, so it printed whole branch lines instead
+# of a name and ran `git checkout ""` when nothing matched. This is what it was
+# meant to do.
+set -eu
+
+target="${1:-master}"
+current=$(git branch --show-current)
+
+candidates=$(git for-each-ref --format='%(refname:short)' refs/heads |
+  grep -- "$target" || true)
+
+if [ -n "$current" ]; then
+  candidates=$(printf '%s\n' "$candidates" | grep -vxF -- "$current" || true)
+fi
+
+branch=$(printf '%s\n' "$candidates" | sed '/^$/d' | head -n 1)
+
+if [ -z "$branch" ]; then
+  echo "cg: no other local branch matches '$target'" >&2
+  exit 1
+fi
+
+exec git checkout "$branch"

@@ -1,0 +1,13 @@
+#!/bin/sh
+# git rcom <command>
+#
+# Run <command> through the shell, then commit whatever it changed with the
+# command itself as the message. For mechanical sweeps where the command is the
+# best description of the diff.
+set -eu
+
+[ "$#" -ge 1 ] || { echo "usage: git rcom <command>" >&2; exit 1; }
+
+eval "$1"
+git add .
+git commit -m "[run] $1"

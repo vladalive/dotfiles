@@ -1,0 +1,9 @@
+#!/bin/sh
+# git logrep <pattern>
+#
+# One-line log filtered by <pattern>, in a pager.
+set -eu
+
+[ "$#" -ge 1 ] || { echo "usage: git logrep <pattern>" >&2; exit 1; }
+
+git log --oneline | grep -- "$1" | less

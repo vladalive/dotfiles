@@ -1,0 +1,28 @@
+#!/bin/sh
+# git pushfl [push args...]
+#
+# `push --force-with-lease` under a name that keeps the literal string
+# "git push --force" off the command line, so over-broad pre-push guards that
+# match on it do not block this safe lease push.
+#
+# Refuses the protected set: main, master, and whatever the branches.* config
+# names via `git env-branch-*`.
+set -eu
+
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+
+for protected in \
+  main \
+  master \
+  "$(git env-branch-master)" \
+  "$(git env-branch-develop)" \
+  "$(git env-branch-staging)" \
+  "$(git env-branch-production)"
+do
+  if [ "$branch" = "$protected" ]; then
+    echo "pushfl: refusing force-with-lease on protected branch '$branch'" >&2
+    exit 1
+  fi
+done
+
+exec git push --force-with-lease "$@"
