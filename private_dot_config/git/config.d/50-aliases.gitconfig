@@ -74,9 +74,9 @@
   lod                         = "!git log --oneline $(git env-branch-develop).."
   lop                         = "!git log --oneline $(git env-branch-production).."
   lm                          = log --pretty=format:'%an | %s'
-  lmd                         = log --author="$(git config user.name)" --since='1 day'
-  lmw                         = log --author="$(git config user.name)" --since='1 week'
-  lmm                         = log --author="$(git config user.name)" --since='1 month'
+  lmd                         = "!git log --author=\"$(git config user.name)\" --since='1 day'"
+  lmw                         = "!git log --author=\"$(git config user.name)\" --since='1 week'"
+  lmm                         = "!git log --author=\"$(git config user.name)\" --since='1 month'"
   lg                          = log --graph --all --abbrev-commit --decorate --date=relative \
     --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
   last                        = log -1 HEAD --stat
@@ -106,7 +106,6 @@
   # well as branches - run it with --dry-run first.
   up                          = pull --rebase --autostash
   pushfl                      = "!~/.config/git/bin/git-pushfl"
-  create-pull-request         = !sh -c 'stash pull-request $0 $@'
   branch-upstream             = "!~/.config/git/bin/git-branch-upstream"
   branch-remove-merged        = "!~/.config/git/bin/git-branch-remove-merged"
   branch-remove-merged-remote = "!~/.config/git/bin/git-branch-remove-merged-remote"
