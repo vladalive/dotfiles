@@ -1,0 +1,116 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# git grep-replace [--dry-run] <pattern> <replacement>
+#
+# Replace <pattern> with <replacement> in every tracked file that matches.
+#
+# The shell version was `git grep -l "$1" | xargs -r sed -i "s/$1/$2/g"` with
+# the substitution itself unquoted, so a pattern containing a space, a slash or
+# a shell metacharacter either did nothing or did something unintended - across
+# the whole repository, in place, with no way back. Here both sides are passed
+# as data and never as shell or sed syntax.
+#
+# <pattern> is an extended regular expression, matching git's own
+# grep.patternType. <replacement> may use \1..\9 for capture groups; write a
+# literal backslash as \\.
+
+require 'open3'
+
+class GrepReplace
+  GitError = Class.new(StandardError)
+
+  def initialize(pattern:, replacement:, dry_run:, out: $stdout, err: $stderr)
+    @pattern = pattern
+    @replacement = replacement
+    @dry_run = dry_run
+    @out = out
+    @err = err
+  end
+
+  def run
+    files = matching_files
+
+    if files.empty?
+      out.puts "No tracked file matches #{pattern.inspect}."
+      return 0
+    end
+
+    regexp = Regexp.new(pattern)
+    occurrences = 0
+    touched = 0
+
+    files.each do |relative|
+      hits = rewrite(File.join(toplevel, relative), relative, regexp)
+      next if hits.zero?
+
+      occurrences += hits
+      touched += 1
+    end
+
+    out.puts "#{dry_run ? 'Would replace' : 'Replaced'} #{occurrences} " \
+             "#{plural(occurrences, 'occurrence', 'occurrences')} in #{touched} " \
+             "#{plural(touched, 'file', 'files')}."
+    0
+  rescue GitError, RegexpError => e
+    @err.puts e.message
+    1
+  end
+
+  private
+
+  attr_reader :pattern, :replacement, :dry_run, :out
+
+  def rewrite(path, relative, regexp)
+    content = File.read(path, encoding: 'UTF-8')
+
+    unless content.valid_encoding?
+      @err.puts "Skipping #{relative}: not valid UTF-8"
+      return 0
+    end
+
+    hits = content.scan(regexp).size
+    return 0 if hits.zero?
+
+    out.puts "#{relative}: #{hits} #{plural(hits, 'match', 'matches')}"
+    File.write(path, content.gsub(regexp, replacement)) unless dry_run
+    hits
+  end
+
+  # -I keeps binaries out; --full-name makes the paths repo-relative regardless
+  # of where the alias was invoked from.
+  def matching_files
+    stdout, stderr, status = Open3.capture3(
+      'git', 'grep', '--full-name', '-l', '-I', '-E', '-e', pattern
+    )
+    return [] if status.exitstatus == 1
+    raise GitError, "git grep failed: #{stderr.strip}" unless status.success?
+
+    stdout.lines(chomp: true).reject(&:empty?)
+  end
+
+  def toplevel
+    @toplevel ||= begin
+      stdout, stderr, status = Open3.capture3('git', 'rev-parse', '--show-toplevel')
+      raise GitError, "not a git repository: #{stderr.strip}" unless status.success?
+
+      stdout.strip
+    end
+  end
+
+  def plural(count, singular, plural)
+    count == 1 ? singular : plural
+  end
+end
+
+if $PROGRAM_NAME == __FILE__
+  argv = ARGV.dup
+  dry_run = !argv.delete('--dry-run').nil?
+
+  unless argv.size == 2
+    warn 'usage: git grep-replace [--dry-run] <pattern> <replacement>'
+    exit 1
+  end
+
+  exit GrepReplace.new(pattern: argv[0], replacement: argv[1], dry_run: dry_run).run
+end

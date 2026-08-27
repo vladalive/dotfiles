@@ -1,0 +1,186 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# git branch-remove-merged [--dry-run]
+#
+# Delete local branches already merged into HEAD, along with any worktree
+# checked out on them.
+#
+# Three guards, each of which exists because an earlier version of this code
+# deleted work that was still in progress:
+#
+#   - a branch with no commits of its own is skipped. A branch created and not
+#     yet committed to is trivially an ancestor of HEAD, so "merged" says
+#     nothing about it: it is a claim somebody has not started filling in.
+#   - a worktree with modified or untracked files is skipped.
+#   - a worktree that a live process has as its cwd is skipped. A clean worktree
+#     an agent opened a minute ago is indistinguishable from an abandoned one.
+#
+# Run it with --dry-run first; it prints the same report without touching
+# anything.
+
+require 'open3'
+
+class BranchRemoveMerged
+  PROTECTED = %w[master main develop deploy production staging qa].freeze
+
+  GitError = Class.new(StandardError)
+
+  def initialize(dry_run:, out: $stdout, err: $stderr)
+    @dry_run = dry_run
+    @out = out
+    @err = err
+    @removed_branches = 0
+    @removed_worktrees = 0
+    @skipped = 0
+    @found = false
+  end
+
+  def run
+    candidates.each { |branch| consider(branch) }
+    report
+    0
+  rescue GitError => e
+    @err.puts e.message
+    1
+  end
+
+  private
+
+  attr_reader :dry_run, :out
+
+  def candidates
+    current = git('branch', '--show-current').strip
+
+    git('for-each-ref', '--format=%(refname:short)', 'refs/heads', '--merged')
+      .lines(chomp: true)
+      .map(&:strip)
+      .reject { |branch| branch.empty? }
+      .reject { |branch| PROTECTED.include?(branch) || branch == current }
+  end
+
+  def consider(branch)
+    @found = true
+
+    unless own_commits?(branch)
+      skip(branch, 'no commits of its own yet (still fresh/claimed)')
+      return
+    end
+
+    worktrees = worktrees_for(branch)
+    blocker = worktrees.lazy.filter_map { |worktree| blocker_for(worktree) }.first
+    return skip(branch, blocker[:reason], blocker[:detail]) if blocker
+
+    worktrees.each { |worktree| git('worktree', 'remove', worktree) } unless dry_run
+    remove(branch, worktrees)
+  end
+
+  # A branch someone just created points at an existing commit and has no
+  # reflog entry of its own; `git reflog show` records ": commit" only once
+  # something has actually been committed on it.
+  def own_commits?(branch)
+    stdout, status = Open3.capture2('git', 'reflog', 'show', branch, err: File::NULL)
+    status.success? && stdout.include?(': commit')
+  end
+
+  def worktrees_for(branch)
+    path = nil
+
+    git('worktree', 'list', '--porcelain').each_line(chomp: true).with_object([]) do |line, found|
+      case line
+      when /\Aworktree (.+)\z/ then path = Regexp.last_match(1)
+      when "branch refs/heads/#{branch}" then found << path if path
+      end
+    end
+  end
+
+  def blocker_for(worktree)
+    if git('-C', worktree, 'status', '--porcelain').strip != ''
+      return {
+        reason: 'worktree has modified or untracked files',
+        detail: ["  #{worktree}", git('-C', worktree, 'status', '--short').chomp]
+      }
+    end
+
+    return unless live_process_in?(worktree)
+
+    { reason: 'a live process has its cwd inside the worktree', detail: ["  #{worktree}"] }
+  end
+
+  def live_process_in?(worktree)
+    root = File.realpath(worktree)
+
+    Dir.glob('/proc/[0-9]*/cwd').any? do |link|
+      cwd = resolve(link)
+      !cwd.nil? && (cwd == root || cwd.start_with?("#{root}/"))
+    end
+  rescue SystemCallError
+    false
+  end
+
+  def resolve(link)
+    File.realpath(link)
+  rescue SystemCallError
+    nil
+  end
+
+  def remove(branch, worktrees)
+    count = worktrees.size
+    label = count == 1 ? 'worktree' : 'worktrees'
+
+    suffix = count.positive? ? " (and #{count} #{label})" : ''
+
+    if dry_run
+      out.puts "Would remove #{branch}#{suffix}"
+      worktrees.each { |worktree| out.puts "  #{worktree}" }
+    else
+      git('branch', '-D', branch)
+      out.puts "Removed #{branch}#{suffix}"
+    end
+
+    @removed_branches += 1
+    @removed_worktrees += count
+  end
+
+  def skip(branch, reason, detail = [])
+    out.puts "Skipping #{branch}: #{reason}"
+    detail.each { |line| out.puts line }
+    @skipped += 1
+  end
+
+  def report
+    return out.puts 'No merged branches to remove.' unless @found
+
+    verb = dry_run ? 'Would remove' : 'Removed'
+    out.puts "#{verb} #{@removed_branches} merged #{plural(@removed_branches, 'branch', 'branches')} " \
+             "and #{@removed_worktrees} #{plural(@removed_worktrees, 'worktree', 'worktrees')}."
+
+    return if @skipped.zero?
+
+    out.puts "Skipped #{@skipped} merged #{plural(@skipped, 'branch', 'branches')} with dirty " \
+             'worktrees, live processes, or no commits of their own.'
+  end
+
+  def plural(count, singular, plural)
+    count == 1 ? singular : plural
+  end
+
+  def git(*args)
+    stdout, stderr, status = Open3.capture3('git', *args)
+    raise GitError, "git #{args.join(' ')} failed: #{stderr.strip}" unless status.success?
+
+    stdout
+  end
+end
+
+if $PROGRAM_NAME == __FILE__
+  argv = ARGV.dup
+  dry_run = !argv.delete('--dry-run').nil?
+
+  unless argv.empty?
+    warn 'usage: git branch-remove-merged [--dry-run]'
+    exit 1
+  end
+
+  exit BranchRemoveMerged.new(dry_run: dry_run).run
+end

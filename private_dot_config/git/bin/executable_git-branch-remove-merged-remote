@@ -1,0 +1,96 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# git branch-remove-merged-remote [--dry-run] [remote]
+#
+# Delete branches on <remote> (default: origin) that are already merged into
+# the current HEAD. Fetches first, so the merged set reflects the remote as it
+# is now rather than as it was last seen.
+#
+# Two differences from the shell version it replaces:
+#
+#   - protection is an exact name match. The old unanchored grep also spared
+#     anything merely containing a protected word, so release/master-fix was
+#     immortal by accident while the actual rule went unenforced.
+#   - --dry-run exists. This pushes a deletion for every branch it finds, in
+#     one go, and there is no undo on the other end.
+
+require 'open3'
+
+class BranchRemoveMergedRemote
+  PROTECTED = %w[master main develop deploy production staging qa backup].freeze
+
+  GitError = Class.new(StandardError)
+
+  def initialize(remote:, dry_run:, out: $stdout, err: $stderr)
+    @remote = remote
+    @dry_run = dry_run
+    @out = out
+    @err = err
+  end
+
+  def run
+    git('fetch', remote)
+    branches = merged_branches
+
+    if branches.empty?
+      out.puts 'No merged branches to delete.'
+      return 0
+    end
+
+    if dry_run
+      out.puts "Would delete #{branches.size} merged #{label(branches)} on #{remote}:"
+      branches.each { |branch| out.puts "  #{branch}" }
+      return 0
+    end
+
+    git('push', remote, *branches.map { |branch| ":#{branch}" })
+    out.puts "Deleted #{branches.size} merged #{label(branches)} on #{remote}."
+    0
+  rescue GitError => e
+    @err.puts e.message
+    1
+  end
+
+  private
+
+  attr_reader :remote, :dry_run, :out
+
+  # Matched on the full refname: refs/remotes/origin/HEAD is a symref, and its
+  # short form is "origin", which would otherwise be pushed as the deletion
+  # ":origin" and fail the whole run.
+  def merged_branches
+    prefix = "refs/remotes/#{remote}/"
+
+    git('for-each-ref', '--format=%(refname)', "refs/remotes/#{remote}", '--merged')
+      .lines(chomp: true)
+      .map(&:strip)
+      .reject { |ref| ref.empty? || ref == "#{prefix}HEAD" }
+      .map { |ref| ref.delete_prefix(prefix) }
+      .reject { |name| name.empty? || PROTECTED.include?(name) }
+      .uniq
+  end
+
+  def label(branches)
+    branches.size == 1 ? 'branch' : 'branches'
+  end
+
+  def git(*args)
+    stdout, stderr, status = Open3.capture3('git', *args)
+    raise GitError, "git #{args.join(' ')} failed: #{stderr.strip}" unless status.success?
+
+    stdout
+  end
+end
+
+if $PROGRAM_NAME == __FILE__
+  argv = ARGV.dup
+  dry_run = !argv.delete('--dry-run').nil?
+
+  if argv.size > 1
+    warn 'usage: git branch-remove-merged-remote [--dry-run] [remote]'
+    exit 1
+  end
+
+  exit BranchRemoveMergedRemote.new(remote: argv.first || 'origin', dry_run: dry_run).run
+end

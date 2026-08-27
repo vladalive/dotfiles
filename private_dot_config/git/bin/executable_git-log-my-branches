@@ -1,0 +1,90 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# git log-my-branches [day|week|month|year]     (default: week)
+#
+# For each local branch, the most recent commit you authored inside the period,
+# newest first. Answers "what was I working on last week, and where".
+#
+# The shell version never produced anything: it asked `git show --since=...`,
+# which ignores --since, and built each line as RESULT="$COMMIT\\\t$k" - a
+# literal backslash rather than a tab, in an unquoted assignment, so everything
+# after the first space of the date was run as a command.
+
+require 'open3'
+
+class LogMyBranches
+  PERIODS = %w[day week month year].freeze
+
+  # git emits %x1f as a literal unit separator. It has to be spelled as a format
+  # placeholder rather than put in the argument directly: both the dates and the
+  # relative times contain spaces, and an argv string cannot carry a NUL.
+  SEP = "\x1F"
+  SEP_FORMAT = '%x1f'
+
+  GitError = Class.new(StandardError)
+
+  def initialize(period:, out: $stdout, err: $stderr)
+    @period = period
+    @out = out
+    @err = err
+  end
+
+  def run
+    since = "1 #{period} ago"
+    author = git('config', 'user.name').strip
+
+    out.puts "my branches since #{since}:"
+
+    rows = branches.filter_map { |branch| row_for(branch, author, since) }
+                   .sort_by { |row| row[:sortable] }
+                   .reverse
+
+    width = rows.map { |row| row[:ago].length }.max || 0
+    rows.each { |row| out.puts "#{row[:when]}  #{row[:ago].ljust(width)}  #{row[:branch]}" }
+    0
+  rescue GitError => e
+    @err.puts e.message
+    1
+  end
+
+  private
+
+  attr_reader :period, :out
+
+  def branches
+    git('for-each-ref', '--format=%(refname:short)', 'refs/heads')
+      .lines(chomp: true)
+      .map(&:strip)
+      .reject(&:empty?)
+  end
+
+  def row_for(branch, author, since)
+    line = git(
+      'log', '-1', "--author=#{author}", "--since=#{since}",
+      "--format=%cI#{SEP_FORMAT}%ci#{SEP_FORMAT}%cr", branch, '--'
+    ).strip
+    return if line.empty?
+
+    sortable, stamp, ago = line.split(SEP)
+    { sortable: sortable, when: stamp, ago: ago, branch: branch }
+  end
+
+  def git(*args)
+    stdout, stderr, status = Open3.capture3('git', *args)
+    raise GitError, "git #{args.join(' ')} failed: #{stderr.strip}" unless status.success?
+
+    stdout
+  end
+end
+
+if $PROGRAM_NAME == __FILE__
+  period = ARGV.first || 'week'
+
+  unless ARGV.size <= 1 && LogMyBranches::PERIODS.include?(period)
+    warn "usage: git log-my-branches [#{LogMyBranches::PERIODS.join('|')}]"
+    exit 1
+  end
+
+  exit LogMyBranches.new(period: period).run
+end
