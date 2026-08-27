@@ -1,0 +1,23 @@
+# Core repository behaviour: what git reads, what it writes, what it trusts.
+# Pager and colour live in 20-ui; credentials and signing in 10-auth.
+
+[core]
+  excludesfile = ~/.gitignore
+  autocrlf = input
+  fsmonitor = false
+  untrackedcache = true
+
+[init]
+  defaultBranch = master
+
+[rerere]
+  enabled = 1
+
+[safe]
+  directory = /workspace
+
+[github]
+  user = vladalive
+
+[gist]
+  private = yes

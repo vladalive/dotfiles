@@ -1,0 +1,56 @@
+# Everything about how git looks: colour, pager, delta.
+#
+# core.pager sits here rather than in 00-core because it is entirely a
+# presentation choice and only makes sense next to the delta settings it feeds.
+
+[core]
+  # pager = diff-so-fancy | less --tabs=4 -cR
+  # pager = delta
+  pager = delta --diff-so-fancy | less --tabs=4 -cRS
+  # pager = delta | less --tabs=4 -cRS
+
+[color]
+  diff = auto
+  status = auto
+  branch = auto
+  ui = true
+
+[color "diff"]
+  meta = 11
+  frag = magenta bold
+  func = 146 bold
+  commit = yellow bold
+  old = red bold
+  new = green bold
+  whitespace = red reverse
+
+[color "diff-highlight"]
+  oldNormal = red bold
+  oldHighlight = red bold 52
+  newNormal = green bold
+  newHighlight = green bold 22
+
+[interactive]
+  # diffFilter = diff-so-fancy --patch
+  diffFilter = delta --color-only
+  # diffFilter = delta --diff-so-fancy
+
+[delta]
+  navigate = true
+  light = false
+  # features = decorations
+  # features = unobtrusive-line-numbers decorations
+
+[delta "decorations"]
+  # side-by-side = true
+  # line-numbers = true
+  commit-decoration-style = blue ol
+  commit-style = raw
+  file-style = omit
+  hunk-header-decoration-style = blue box
+  hunk-header-file-style = red
+  hunk-header-line-number-style = "#067a00"
+  hunk-header-style = file line-number syntax
+
+[diff-so-fancy]
+  useUnicodeRuler = true

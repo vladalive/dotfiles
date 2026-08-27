@@ -1,0 +1,28 @@
+# Comparing and combining: diff, merge, and the tools that drive them.
+# Colour and pager for these live in 20-ui.
+
+[diff]
+  tool = vimdiff
+  compactionHeuristic = true
+  colorMoved = default
+
+[difftool]
+  prompt = false
+
+[merge]
+  tool = vimdiff
+  conflictstyle = diff3
+  ff = only
+
+[mergetool]
+  prompt = false
+  keepBackup = false
+
+[mergetool "diffconflicts"]
+  cmd = vim -c DiffConflicts \"$MERGED\" \"$BASE\" \"$LOCAL\" \"$REMOTE\"
+  trustExitCode = true
+
+[grep]
+  lineNumber = true
+  patternType = extended
+  extendedRegexp = true

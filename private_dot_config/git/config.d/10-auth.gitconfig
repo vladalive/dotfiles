@@ -1,0 +1,20 @@
+# Signing and credentials.
+#
+# The signing key itself is host-specific and lives in the untracked
+# ~/.gitconfig.local, written by `git gpg-signingkey-local`.
+
+[commit]
+  gpgsign = true
+
+[credential]
+  helper = cache
+
+[credential "https://github.com"]
+  # Empty value first clears any helper inherited from a wider scope, so `gh`
+  # is the only one consulted.
+  helper =
+  helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
+
+[credential "https://gist.github.com"]
+  helper =
+  helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential

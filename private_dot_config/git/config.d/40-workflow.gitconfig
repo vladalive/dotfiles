@@ -1,0 +1,28 @@
+# How history moves between here and a remote: push, pull, rebase, and the
+# branch-naming conventions the env-branch-* aliases read.
+
+[push]
+  default = current
+
+[pull]
+  rebase = true
+  ff = only
+
+[rebase]
+  autosquash = true
+  autoStash = true
+
+[gitflow "branch"]
+  master = master
+  develop = develop
+
+[gitflow "prefix"]
+  feature = feature/
+  bugfix = bugfix/
+  release = release/
+  hotfix = hotfix/
+  support = support/
+  versiontag =
+
+[git-up "bundler"]
+  check = true
