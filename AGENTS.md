@@ -70,6 +70,9 @@ Use `chezmoi diff` to inspect live drift. Use `chezmoi add <target>` or
 - `.chezmoiignore` - excludes repo docs, legacy dotbot layout, and vendored code from chezmoi target state
 - `dot_*` - source-state files applied into `$HOME`
 - `private_dot_config/` - source-state files applied into `$HOME/.config`
+- `private_dot_config/git/config.d/` - the Git configuration, one file per theme; `dot_gitconfig` holds identity and the include list and nothing else
+- `private_dot_config/git/bin/` - the Git helper scripts the aliases call; sh for thin wrappers, Ruby for anything that deletes
+- `spec/` - RSpec coverage for the Ruby helpers, chezmoi-ignored
 - `symlink_dot_dotfiles.tmpl` - keeps `~/.dotfiles` pointing at the chezmoi source repo
 - `symlink_dot_janus.tmpl` - preserves the legacy Janus plugin symlink
 - `files/janus/` - legacy Vim/Janus plugins retained for `~/.janus`
@@ -93,6 +96,18 @@ remain in the local Skate `@env` database and must not be added to this repo.
 
 Prefer changing chezmoi source-state files such as `dot_zshenv`, `dot_zshrc`,
 `dot_gitconfig`, and `private_dot_config/nvim/init.lua`.
+
+For Git changes:
+
+- settings go in the matching `private_dot_config/git/config.d/` fragment, not
+  in `dot_gitconfig`; touch `dot_gitconfig` only to add a fragment to the
+  include list, which git cannot glob
+- an alias with a shell body goes in `private_dot_config/git/bin/` as a script,
+  and the alias becomes `"!~/.config/git/bin/git-<name>"`. Bodies stopped
+  living in the config because git's own quoting had silently corrupted
+  several of them
+- a helper that deletes branches, worktrees or file contents is written in Ruby
+  and gets a spec; a thin wrapper around one git command stays in POSIX sh
 
 Do not edit dependency or vendored code under `files/janus/` unless the task is
 explicitly to update that dependency. For legacy Vim plugins, prefer submodule
@@ -119,10 +134,28 @@ zsh -n dot_zshenv dot_zshrc
 bash -n dot_bashrc dot_bash_profile dot_bash_aliases
 ```
 
-Git config:
+Git config - the root file, then each fragment on its own:
 
 ```bash
 git config --file dot_gitconfig --list >/dev/null
+for f in private_dot_config/git/config.d/*.gitconfig; do
+  git config --file "$f" --list >/dev/null || echo "broken: $f"
+done
+```
+
+Check the fragments individually. `--includes` on `dot_gitconfig` follows the
+paths into `$HOME`, so it validates what chezmoi applied last time rather than
+what is in the working tree. Conversely, comparing effective config before and
+after a change does need `--includes`: it defaults to off whenever the file is
+named explicitly, and without it a split looks like it deleted every setting.
+
+Git helper scripts:
+
+```bash
+for f in private_dot_config/git/bin/executable_git-*; do
+  head -1 "$f" | grep -q ruby && ruby -c "$f" >/dev/null || sh -n "$f"
+done
+bundle exec rspec
 ```
 
 Submodules:
