@@ -26,4 +26,12 @@ if (($# > 0)); then
   exec bats "$@"
 fi
 
-exec bats --formatter pretty --timing -r "${root}/test/bats"
+# The pretty formatter drives the cursor through tput and dies on a runner with
+# no $TERM - `printf: write error: Broken pipe`, exit 2, before a single test
+# runs. Only ask for it when something is actually watching.
+formatter=tap
+if [[ -t 1 ]]; then
+  formatter=pretty
+fi
+
+exec bats --formatter "${formatter}" --timing -r "${root}/test/bats"
