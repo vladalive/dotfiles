@@ -4,6 +4,16 @@
 [push]
   default = current
 
+  # A lease on its own asks "is the remote still where my remote-tracking ref
+  # says it is?" - and on this machine worktrees share one .git, so a sibling
+  # session's push has already moved that ref. The lease then compares two
+  # values that agree and lets the force through.
+  #
+  # This additionally requires the remote tip to be reachable from this
+  # branch's reflog: not "I saw it", but "I integrated it". Ignored unless
+  # --force-with-lease is in play, so ordinary pushes are unaffected.
+  useForceIfIncludes = true
+
 [pull]
   rebase = true
   ff = only

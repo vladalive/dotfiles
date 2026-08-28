@@ -7,6 +7,13 @@
 #
 # Refuses the protected set: main, master, and whatever the branches.* config
 # names via `git env-branch-*`.
+#
+# --force-if-includes is passed explicitly, not left to push.useForceIfIncludes
+# in ~/.config/git/config.d/40-workflow.gitconfig, so the guard travels with the
+# script to a host where that config was never applied. Without it a lease is
+# not a guarantee here: worktrees share one .git, so a sibling session's push
+# updates the remote-tracking ref this lease is measured against, and the force
+# goes through over commits you never saw.
 set -eu
 
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
@@ -24,4 +31,4 @@ for protected in \
   fi
 done
 
-exec git push --force-with-lease "$@"
+exec git push --force-with-lease --force-if-includes "$@"
