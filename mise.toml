@@ -1,0 +1,9 @@
+# Pins the shell toolchain so CI and a laptop lint with the same versions.
+# Only the tooling under bin/ uses these; nothing chezmoi applies depends on it.
+
+[settings]
+lockfile = true
+
+[tools]
+shellcheck = "0.11.0"
+shfmt = "3.13.1"

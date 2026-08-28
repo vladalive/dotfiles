@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# Format, or check the formatting of, the shell scripts this repository owns.
+
+set -euo pipefail
+
+if [[ "${1:-}" == "--help" ]]; then
+  cat <<'EOF'
+Usage: bin/fmt-shell [--check] [paths...]
+
+Run shfmt against the Git helper scripts and this repo's tooling.
+Rewrites in place by default; --check prints a diff and fails instead.
+EOF
+  exit 0
+fi
+
+mode=(-w)
+
+if [[ "${1:-}" == "--check" ]]; then
+  mode=(-d)
+  shift
+fi
+
+# shellcheck source=./_shell_files.bash
+source "$(dirname "${BASH_SOURCE[0]}")/_shell_files.bash"
+cd "$(repo_root)"
+
+if (($# > 0)); then
+  exec shfmt -i 2 -ci "${mode[@]}" "$@"
+fi
+
+mapfile -t files < <(shell_files)
+
+shfmt -i 2 -ci "${mode[@]}" "${files[@]}"
+printf 'shfmt: %d files\n' "${#files[@]}"

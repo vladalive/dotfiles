@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# Everything CI runs, in the same order. Run this before pushing.
+
+set -euo pipefail
+
+# shellcheck source=./_shell_files.bash
+source "$(dirname "${BASH_SOURCE[0]}")/_shell_files.bash"
+cd "$(repo_root)"
+
+failed=()
+
+step() {
+  local label="$1"
+  shift
+  printf '\n==> %s\n' "${label}"
+  if ! "$@"; then
+    failed+=("${label}")
+  fi
+}
+
+step 'shellcheck' bin/lint-shell
+step 'shfmt --check' bin/fmt-shell --check
+step 'bats' bin/test-bats
+step 'rspec' bundle exec rspec
+
+check_git_fragments() {
+  local fragment
+  git config --file dot_gitconfig --list >/dev/null
+  for fragment in private_dot_config/git/config.d/*.gitconfig; do
+    git config --file "${fragment}" --list >/dev/null
+  done
+  printf 'all fragments parse\n'
+}
+
+step 'git config fragments' check_git_fragments
+
+if ((${#failed[@]} > 0)); then
+  printf '\nFAILED: %s\n' "${failed[*]}" >&2
+  exit 1
+fi
+
+printf '\nAll checks passed.\n'

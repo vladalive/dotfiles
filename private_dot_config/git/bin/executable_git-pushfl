@@ -17,8 +17,7 @@ for protected in \
   "$(git env-branch-master)" \
   "$(git env-branch-develop)" \
   "$(git env-branch-staging)" \
-  "$(git env-branch-production)"
-do
+  "$(git env-branch-production)"; do
   if [ "$branch" = "$protected" ]; then
     echo "pushfl: refusing force-with-lease on protected branch '$branch'" >&2
     exit 1

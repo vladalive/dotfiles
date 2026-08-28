@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+#
+# Run ShellCheck over the shell scripts this repository owns.
+
+set -euo pipefail
+
+if [[ "${1:-}" == "--help" ]]; then
+  cat <<'EOF'
+Usage: bin/lint-shell [paths...]
+
+Run ShellCheck against the Git helper scripts and this repo's tooling.
+With paths, check only those files.
+EOF
+  exit 0
+fi
+
+# shellcheck source=./_shell_files.bash
+source "$(dirname "${BASH_SOURCE[0]}")/_shell_files.bash"
+cd "$(repo_root)"
+
+if (($# > 0)); then
+  exec shellcheck "$@"
+fi
+
+mapfile -t files < <(shell_files)
+
+shellcheck "${files[@]}"
+printf 'shellcheck: %d files clean\n' "${#files[@]}"

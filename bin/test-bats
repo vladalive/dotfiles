@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# Run the Bats suite covering the POSIX sh Git helpers.
+
+set -euo pipefail
+
+if [[ "${1:-}" == "--help" ]]; then
+  cat <<'EOF'
+Usage: bin/test-bats [bats args...]
+
+Run the Bats suite in test/bats. With arguments, pass them to bats verbatim.
+EOF
+  exit 0
+fi
+
+# shellcheck source=./_shell_files.bash
+source "$(dirname "${BASH_SOURCE[0]}")/_shell_files.bash"
+root="$(repo_root)"
+
+if ! command -v bats >/dev/null 2>&1; then
+  echo 'Missing bats. Install with: brew install bats-core' >&2
+  exit 1
+fi
+
+if (($# > 0)); then
+  exec bats "$@"
+fi
+
+exec bats --formatter pretty --timing -r "${root}/test/bats"

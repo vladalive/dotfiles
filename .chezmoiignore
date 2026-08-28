@@ -4,6 +4,7 @@
 /.bundle/
 /.claude/
 /.codegraph/
+/.editorconfig
 /.nvmrc
 /.playwright/
 /.rspec
@@ -14,7 +15,11 @@
 /Gemfile.lock
 /LICENSE.md
 /README.md
+/bin/
 /dotbot/
 /files/
 /install
+/mise.lock
+/mise.toml
 /spec/
+/test/

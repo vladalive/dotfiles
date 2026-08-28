@@ -1,0 +1,9 @@
+# No `shell=` directive on purpose. The repo mixes bash tooling under bin/ with
+# POSIX sh helpers under private_dot_config/git/bin/, and setting a dialect here
+# would override each file's shebang - hiding bashisms in the sh scripts.
+external-sources=true
+
+# bin/* source their shared helper through $(dirname "${BASH_SOURCE[0]}"), which
+# ShellCheck cannot evaluate. SCRIPTDIR makes it resolve `source=` directives
+# relative to the script being checked, so linting works from any directory.
+source-path=SCRIPTDIR
