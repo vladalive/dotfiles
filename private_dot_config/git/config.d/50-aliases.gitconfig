@@ -46,7 +46,7 @@
   # Rebase.
   rebm                        = "!git rebase $(git env-branch-master)"
   rebd                        = "!git rebase $(git env-branch-develop)"
-  rebp                        = rebase production
+  rebp                        = "!git rebase $(git env-branch-production)"
   rebim                       = "!git rebase -i $(git env-branch-master)"
   rebid                       = "!git rebase -i $(git env-branch-develop)"
   rebip                       = "!git rebase -i $(git env-branch-production)"
