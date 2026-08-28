@@ -6,20 +6,24 @@
 set -eu
 
 usage() {
-  echo "usage: git grep-lang <ruby|html|css|js> <pattern> [git grep args...]" >&2
+  echo "usage: git grep-lang <ruby|html|css|js> <pattern> [git grep options...]" >&2
   exit 1
 }
 
 [ "$#" -ge 2 ] || usage
 
 lang="$1"
-shift
+pattern="$2"
+shift 2
 
+# The pattern goes through -e and the options stay in front of it, so a pattern
+# that begins with a dash still reads as a pattern, and `--name-only` after the
+# pattern still reads as an option.
 case "$lang" in
-  ruby) set -- "$@" -- '*.rb' ;;
-  html) set -- "$@" -- '*.html' '*.haml' '*.jade' '*.pug' '*.vue' ;;
-  css)  set -- "$@" -- '*.css' '*.scss' '*.sass' '*.styl' '*.less' ;;
-  js)   set -- "$@" -- '*.js' '*.coffee' '*.ts' ;;
+  ruby) set -- "$@" -e "$pattern" -- '*.rb' ;;
+  html) set -- "$@" -e "$pattern" -- '*.html' '*.haml' '*.jade' '*.pug' '*.vue' ;;
+  css) set -- "$@" -e "$pattern" -- '*.css' '*.scss' '*.sass' '*.styl' '*.less' ;;
+  js) set -- "$@" -e "$pattern" -- '*.js' '*.coffee' '*.ts' ;;
   *)
     echo "grep-lang: unknown language '$lang'" >&2
     usage
