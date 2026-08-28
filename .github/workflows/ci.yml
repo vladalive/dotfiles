@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  shell:
+    name: shellcheck, shfmt, bats
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install mise tools
+        uses: jdx/mise-action@v2
+        with:
+          install: true
+          cache: true
+
+      - name: Install bats
+        uses: bats-core/bats-action@3.0.0
+        with:
+          support-install: false
+          assert-install: false
+          detik-install: false
+          file-install: false
+
+      - name: ShellCheck
+        run: bin/lint-shell
+
+      - name: shfmt
+        run: bin/fmt-shell --check
+
+      # git init needs a committer identity, and the helpers under test read
+      # branch names through the env-branch-* aliases the sandbox defines.
+      - name: Bats
+        run: bin/test-bats
+
+  ruby:
+    name: rspec
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ruby
+          bundler: latest
+          bundler-cache: true
+
+      - name: RSpec
+        run: bundle exec rspec
+
+  config:
+    name: git config fragments
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Each fragment is parsed on its own. --includes on dot_gitconfig would
+      # follow the paths into $HOME and validate whatever was applied there,
+      # not what is in this checkout.
+      - name: Parse every fragment
+        run: |
+          git config --file dot_gitconfig --list >/dev/null
+          for fragment in private_dot_config/git/config.d/*.gitconfig; do
+            git config --file "$fragment" --list >/dev/null
+          done

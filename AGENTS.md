@@ -73,6 +73,8 @@ Use `chezmoi diff` to inspect live drift. Use `chezmoi add <target>` or
 - `private_dot_config/git/config.d/` - the Git configuration, one file per theme; `dot_gitconfig` holds identity and the include list and nothing else
 - `private_dot_config/git/bin/` - the Git helper scripts the aliases call; sh for thin wrappers, Ruby for anything that deletes
 - `spec/` - RSpec coverage for the Ruby helpers, chezmoi-ignored
+- `test/bats/` - Bats coverage for the sh helpers, chezmoi-ignored
+- `bin/` - this repo's own tooling (`check`, `lint-shell`, `fmt-shell`, `test-bats`), chezmoi-ignored
 - `symlink_dot_dotfiles.tmpl` - keeps `~/.dotfiles` pointing at the chezmoi source repo
 - `symlink_dot_janus.tmpl` - preserves the legacy Janus plugin symlink
 - `files/janus/` - legacy Vim/Janus plugins retained for `~/.janus`
@@ -108,6 +110,10 @@ For Git changes:
   several of them
 - a helper that deletes branches, worktrees or file contents is written in Ruby
   and gets a spec; a thin wrapper around one git command stays in POSIX sh
+- every helper is covered either way: sh by Bats in `test/bats/`, Ruby by RSpec
+  in `spec/`. `bin/lint-shell` and `bin/fmt-shell` cover the sh ones' style,
+  and a new script under `bin/` or `private_dot_config/git/bin/` is picked up
+  by both automatically
 
 Do not edit dependency or vendored code under `files/janus/` unless the task is
 explicitly to update that dependency. For legacy Vim plugins, prefer submodule
@@ -125,9 +131,33 @@ Keep commits small and coherent. Do not leave completed work uncommitted.
 
 ## Testing
 
-Run focused checks for the area touched.
+`bin/check` runs everything CI runs, in the same order:
 
-Shell:
+```bash
+bin/check
+```
+
+It needs `shellcheck`, `shfmt` (both pinned in `mise.toml`), `bats`
+(`brew install bats-core`) and `bundle`. CI runs the same three suites on
+every push to master and every pull request; see `.github/workflows/ci.yml`.
+
+For a single area, run the piece directly:
+
+```bash
+bin/lint-shell           # ShellCheck over the sh helpers and bin/
+bin/fmt-shell --check    # shfmt -i 2 -ci, diff only
+bin/fmt-shell            # ...and rewrite
+bin/test-bats            # Bats, the sh Git helpers
+bundle exec rspec        # RSpec, the Ruby Git helpers
+```
+
+Both suites drive a real git repository in a temp directory with `$HOME`
+redirected there, so neither can read the real `~/.gitconfig` - which signs
+commits, sets `merge.ff` and defines the aliases under test.
+
+The rest of the repository is checked by hand.
+
+Shell startup files:
 
 ```bash
 zsh -n dot_zshenv dot_zshrc
@@ -148,15 +178,6 @@ paths into `$HOME`, so it validates what chezmoi applied last time rather than
 what is in the working tree. Conversely, comparing effective config before and
 after a change does need `--includes`: it defaults to off whenever the file is
 named explicitly, and without it a split looks like it deleted every setting.
-
-Git helper scripts:
-
-```bash
-for f in private_dot_config/git/bin/executable_git-*; do
-  head -1 "$f" | grep -q ruby && ruby -c "$f" >/dev/null || sh -n "$f"
-done
-bundle exec rspec
-```
 
 Submodules:
 
