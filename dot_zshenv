@@ -8,6 +8,11 @@ path=(
   $path
 )
 
+# Google Cloud SDK, where its installer puts it. Absent on most machines.
+if [[ -d "$HOME/google-cloud-sdk/bin" ]]; then
+  path=("$HOME/google-cloud-sdk/bin" $path)
+fi
+
 # Wire envs mutations into the current shell and load all stored values.
 if (( $+commands[envs] )); then
   envs_executable="${commands[envs]}"
