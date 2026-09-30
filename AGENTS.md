@@ -44,8 +44,8 @@ Optional or host-specific:
 - `$HOME/.shell.local` for host-local PATH, aliases, and secrets
 - `$HOME/.bash_env` and `$HOME/.bash_keys` for local environment/secrets
 - `$HOME/.config/.chatgpt.key` for `ChatGPT.nvim`
-- `$HOME/.gitconfig.local` for host-specific Git settings: the signing key, and
-  the credential helpers `gh auth setup-git` writes with this host's `gh` path
+- `$HOME/.gitconfig.local` for host-specific Git settings, such as the signing
+  key or `commit.gpgsign = false` on a host without one
 
 ## Installation
 
