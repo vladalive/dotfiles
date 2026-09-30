@@ -44,6 +44,8 @@ Optional or host-specific:
 - `$HOME/.shell.local` for host-local PATH, aliases, and secrets
 - `$HOME/.bash_env` and `$HOME/.bash_keys` for local environment/secrets
 - `$HOME/.config/.chatgpt.key` for `ChatGPT.nvim`
+- `$HOME/.gitconfig.local` for host-specific Git settings: the signing key, and
+  the credential helpers `gh auth setup-git` writes with this host's `gh` path
 
 ## Installation
 
@@ -91,7 +93,8 @@ Shell config is intentionally shared where practical. `zshrc`, `bashrc`, and
 `bash_profile` may all source local files, so guard additions against duplicate
 loading when needed.
 
-`dot_zshenv` contains only the `envs` loader. Stored environment values
+`dot_zshenv` puts asdf, Linuxbrew and, where installed, the Google Cloud SDK
+on PATH for every zsh, then runs the `envs` loader. Stored environment values
 remain in the local Skate `@env` database and must not be added to this repo.
 
 ## Development

@@ -65,8 +65,11 @@ Common local files:
 - `$HOME/.shell.local` for host-specific aliases and PATH entries
 - `$HOME/.bash_env` and `$HOME/.bash_keys` for local environment/secrets
 - `$HOME/.config/.chatgpt.key` for `ChatGPT.nvim`
+- `$HOME/.gitconfig.local` for host-specific Git settings: the signing key, and
+  the credential helpers `gh auth setup-git` writes with this host's `gh` path
 
-`dot_zshenv` contains only the `envs` loader. Stored environment values
+`dot_zshenv` puts asdf, Linuxbrew and, where installed, the Google Cloud SDK
+on PATH for every zsh, then runs the `envs` loader. Stored environment values
 remain in the local Skate `@env` database and must not be added to this repo.
 
 Use `chezmoi diff` to inspect live drift. Use `chezmoi add <target>` or
