@@ -1,25 +1,27 @@
 # Repository metadata and legacy Janus plugin layout. Chezmoi source-state files
 # live at the repository root using chezmoi naming conventions such as dot_zshrc
 # and private_dot_config/nvim/init.lua.
-/.bundle/
-/.claude/
-/.codegraph/
-/.editorconfig
-/.nvmrc
-/.playwright/
-/.rspec
-/.ruby-lsp/
-/.tool-versions
-/AGENTS.md
-/Gemfile
-/Gemfile.lock
-/LICENSE.md
-/README.md
-/bin/
-/dotbot/
-/files/
-/install
-/mise.lock
-/mise.toml
-/spec/
-/test/
+# Patterns are target paths relative to $HOME, written without a leading
+# slash: chezmoi 2.73 rejects "/name" as an invalid path, where 2.71 took it.
+.bundle/
+.claude/
+.codegraph/
+.editorconfig
+.nvmrc
+.playwright/
+.rspec
+.ruby-lsp/
+.tool-versions
+AGENTS.md
+Gemfile
+Gemfile.lock
+LICENSE.md
+README.md
+bin/
+dotbot/
+files/
+install
+mise.lock
+mise.toml
+spec/
+test/
