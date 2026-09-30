@@ -5,12 +5,10 @@
 .bundle
 .rake_tasks~
 .rvmrc
-.node-version
 .DS_Store
 .sass-cache/
 node_modules
 npm-debug.log
-config/initializers/pry.rb
 config/initializers/server.rb
 NOTES.txt
 dump.rdb
@@ -28,15 +26,19 @@ tags.temp
 .env.production.local
 .env.development.local
 .env.test.local
-.rubocop.yml
+# .rubocop.yml is deliberately NOT ignored: it is a project's lint config and
+# belongs in its repo. Ignoring it made a new one invisible to git status.
 .rubocop.local.yml
 .claude
+# Agent instruction files (AGENTS.md, CLAUDE.md, .agents, docs/plans) are NOT
+# ignored here: they belong to the repositories that carry them - AGENTS.md is
+# committed in 12 of them. A global ignore makes a NEW file of that name
+# invisible to git status and to `git add -A`, with no warning, while an
+# already-tracked one keeps working - so the trap only springs on a new repo.
+# What stays below is local state that genuinely belongs to no repository.
 .aider*
-.agents
 .gemini
 CRUSH.md
-AGENTS.md
-CLAUDE.md
 GEMINI.md
 
 docs/creating-checkers.md
@@ -47,7 +49,6 @@ docs/creating-checkers.md
 .claude-flow/
 .mcp.json
 .swarm/
-docs/plans
 docs/superpowers/
 .codegraph
 .worktrees/
