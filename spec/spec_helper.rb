@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'fileutils'
+require 'json'
 require 'open3'
 require 'rbconfig'
 require 'tmpdir'
@@ -36,9 +37,9 @@ module GitScriptHelper
     stdout
   end
 
-  def run_script(name, *args, chdir:)
+  def run_script(name, *args, chdir:, env: {})
     Open3.capture3(
-      git_env, RbConfig.ruby, File.join(SCRIPT_DIR, "executable_#{name}"), *args, chdir: chdir
+      git_env.merge(env), RbConfig.ruby, File.join(SCRIPT_DIR, "executable_#{name}"), *args, chdir: chdir
     )
   end
 

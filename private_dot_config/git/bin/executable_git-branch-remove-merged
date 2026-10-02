@@ -4,25 +4,47 @@
 # git branch-remove-merged [--dry-run]
 #
 # Delete local branches already merged into HEAD, along with any worktree
-# checked out on them.
+# checked out on them. "Merged" means either an ancestor of HEAD, or - for a
+# squash-merge, which leaves the commits unreachable - the head of a merged
+# pull request that is exactly the branch tip (asked of gh; without gh only the
+# ancestry half runs).
 #
-# Three guards, each of which exists because an earlier version of this code
+# Four guards, each of which exists because an earlier version of this code
 # deleted work that was still in progress:
 #
-#   - a branch with no commits of its own is skipped. A branch created and not
-#     yet committed to is trivially an ancestor of HEAD, so "merged" says
-#     nothing about it: it is a claim somebody has not started filling in.
+#   - a branch with no commits of its own is skipped while it is younger than
+#     48 hours. A branch created and not yet committed to is trivially an
+#     ancestor of HEAD, so "merged" says nothing about it: it is a claim
+#     somebody has not started filling in. After 48 hours it is an abandoned
+#     claim, and keeping it forever is how a hundred empty worktrees piled up.
 #   - a worktree with modified or untracked files is skipped.
 #   - a worktree that a live process has as its cwd is skipped. A clean worktree
 #     an agent opened a minute ago is indistinguishable from an abandoned one.
+#   - a worktree holding ignored files that nothing can regenerate is skipped.
+#     git does not count ignored files as dirt, so `worktree remove` would take
+#     them without a word. Symlinks, whatever .worktrees.yml provisions and
+#     the usual build output (tmp, log, coverage, node_modules...) are fine.
 #
 # Run it with --dry-run first; it prints the same report without touching
 # anything.
 
+require 'json'
 require 'open3'
+require 'yaml'
 
 class BranchRemoveMerged
   PROTECTED = %w[master main develop deploy production staging qa].freeze
+
+  # How long a branch with no commits of its own is treated as a claim somebody
+  # is about to fill in.
+  EMPTY_GRACE = 48 * 3600
+
+  # Ignored paths that a build or a test run recreates; losing them costs time,
+  # not work.
+  REGENERABLE = %w[
+    tmp log coverage node_modules .bundle .ruby-lsp .codegraph
+    .playwright-cli .playwright-mcp vendor/bundle public/packs public/assets
+  ].freeze
 
   GitError = Class.new(StandardError)
 
@@ -34,6 +56,7 @@ class BranchRemoveMerged
     @removed_worktrees = 0
     @skipped = 0
     @found = false
+    @squash_merged = []
   end
 
   def run
@@ -52,17 +75,55 @@ class BranchRemoveMerged
   def candidates
     current = git('branch', '--show-current').strip
 
-    git('for-each-ref', '--format=%(refname:short)', 'refs/heads', '--merged')
-      .lines(chomp: true)
-      .map(&:strip)
-      .reject { |branch| branch.empty? }
+    merged = git('for-each-ref', '--format=%(refname:short)', 'refs/heads', '--merged')
+             .lines(chomp: true)
+             .map(&:strip)
+             .reject(&:empty?)
+
+    @squash_merged = squash_merged_branches - merged
+
+    (merged + @squash_merged)
       .reject { |branch| PROTECTED.include?(branch) || branch == current }
+  end
+
+  # A squash-merge never makes the branch's commits reachable from HEAD, so
+  # --merged cannot see it; the merged PR is the only record. Trust it only when
+  # the PR's head is exactly the local tip - commits added after the merge are
+  # work the PR never had, and keep the branch alive.
+  def squash_merged_branches
+    heads = merged_pr_heads
+    return [] if heads.empty?
+
+    git('for-each-ref', '--format=%(refname:short) %(objectname)', 'refs/heads')
+      .lines(chomp: true)
+      .map(&:split)
+      .select { |branch, tip| heads.fetch(branch, []).include?(tip) }
+      .map(&:first)
+  end
+
+  def merged_pr_heads
+    stdout, stderr, status = Open3.capture3(
+      ENV.fetch('BRANCH_REMOVE_MERGED_GH', 'gh'),
+      'pr', 'list', '--state', 'merged', '--limit', '1000', '--json', 'headRefName,headRefOid'
+    )
+    return gh_unavailable(stderr) unless status.success?
+
+    JSON.parse(stdout).each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |pr, heads|
+      heads[pr['headRefName']] << pr['headRefOid']
+    end
+  rescue SystemCallError, JSON::ParserError => e
+    gh_unavailable(e.message)
+  end
+
+  def gh_unavailable(reason)
+    @err.puts "gh could not list merged pull requests, so squash-merged branches were not checked: #{reason.to_s.strip}"
+    {}
   end
 
   def consider(branch)
     @found = true
 
-    unless own_commits?(branch)
+    if !own_commits?(branch) && fresh?(branch)
       skip(branch, 'no commits of its own yet (still fresh/claimed)')
       return
     end
@@ -81,6 +142,15 @@ class BranchRemoveMerged
   def own_commits?(branch)
     stdout, status = Open3.capture2('git', 'reflog', 'show', branch, err: File::NULL)
     status.success? && stdout.include?(': commit')
+  end
+
+  # Seconds since the branch's oldest reflog entry. A branch with no reflog at
+  # all cannot be dated, and what cannot be dated is treated as fresh.
+  def fresh?(branch)
+    stdout, status = Open3.capture2('git', 'reflog', 'show', '--date=unix', '--format=%gd', branch, err: File::NULL)
+    created = status.success? ? stdout.lines.last.to_s[/@\{(\d+)\}/, 1] : nil
+
+    created.nil? || Time.now.to_i - created.to_i < EMPTY_GRACE
   end
 
   def worktrees_for(branch)
@@ -102,9 +172,62 @@ class BranchRemoveMerged
       }
     end
 
-    return unless live_process_in?(worktree)
+    if live_process_in?(worktree)
+      return { reason: 'a live process has its cwd inside the worktree', detail: ["  #{worktree}"] }
+    end
 
-    { reason: 'a live process has its cwd inside the worktree', detail: ["  #{worktree}"] }
+    irreplaceable = irreplaceable_ignored(worktree)
+    return if irreplaceable.empty?
+
+    { reason: 'worktree holds ignored files that nothing regenerates',
+      detail: irreplaceable.map { |path| "  #{worktree}/#{path}" } }
+  end
+
+  def irreplaceable_ignored(worktree)
+    provisioned = provisioned_paths(worktree)
+
+    git('-C', worktree, 'status', '--porcelain', '-z', '--ignored')
+      .split("\0")
+      .filter_map { |entry| entry[3..] if entry.start_with?('!! ') }
+      .reject { |path| replaceable?(worktree, path, provisioned) }
+  end
+
+  def replaceable?(worktree, path, provisioned)
+    bare = path.chomp('/')
+
+    covers = ->(prefix) { bare == prefix || bare.start_with?("#{prefix}/") }
+    return true if REGENERABLE.any?(&covers) || provisioned.any?(&covers)
+
+    only_symlinks?(File.join(worktree, bare))
+  end
+
+  def only_symlinks?(path)
+    return true if File.symlink?(path)
+    return false unless File.directory?(path)
+
+    Dir.glob(File.join(path, '**', '*'), File::FNM_DOTMATCH)
+       .reject { |entry| %w[. ..].include?(File.basename(entry)) }
+       .all? { |entry| File.symlink?(entry) || File.directory?(entry) }
+  end
+
+  # What `git worktrees sync` puts in a new worktree, so it is by definition
+  # something sync can put back. The file is usually untracked and so lives only
+  # in the main checkout, never in the worktree being judged.
+  def provisioned_paths(worktree)
+    config = [worktree, main_checkout(worktree)].compact
+                                                .map { |root| File.join(root, '.worktrees.yml') }
+                                                .find { |path| File.file?(path) }
+    return [] unless config
+
+    declared = YAML.safe_load_file(config) || {}
+    %w[link copy].flat_map { |section| Array(declared[section]) }.map { |path| path.to_s.chomp('/') }
+  rescue SystemCallError, Psych::Exception
+    []
+  end
+
+  def main_checkout(worktree)
+    common = git('-C', worktree, 'rev-parse', '--path-format=absolute', '--git-common-dir').strip
+    File.dirname(common) if File.basename(common) == '.git'
   end
 
   def live_process_in?(worktree)
@@ -129,6 +252,7 @@ class BranchRemoveMerged
     label = count == 1 ? 'worktree' : 'worktrees'
 
     suffix = count.positive? ? " (and #{count} #{label})" : ''
+    suffix += ' [squash-merged]' if @squash_merged.include?(branch)
 
     if dry_run
       out.puts "Would remove #{branch}#{suffix}"
