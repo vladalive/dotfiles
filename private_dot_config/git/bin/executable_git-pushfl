@@ -79,7 +79,9 @@ module PushFL
     return if git('merge-base', '--is-ancestor', old, oid)
 
     input = "refs/heads/#{branch} #{oid} refs/heads/#{target} #{old}\n"
-    _out, err, status = Open3.capture3('agent-work-claims', 'pre-push', '--remote', remote, stdin_data: input)
+    helper = File.join(Dir.home, '.local/bin/agent-work-claims')
+    helper = 'agent-work-claims' unless File.executable?(helper)
+    _out, err, status = Open3.capture3(helper, 'pre-push', '--remote', remote, stdin_data: input)
     raise ArgumentError, "claim check refused: #{err.strip}" unless status.success?
   rescue Errno::ENOENT
     raise ArgumentError, 'agent-work-claims is missing; cannot authorize a rewritten branch'
