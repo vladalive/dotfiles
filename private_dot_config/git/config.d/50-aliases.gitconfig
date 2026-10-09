@@ -106,6 +106,7 @@
   # well as branches - run it with --dry-run first.
   up                          = pull --rebase --autostash
   pushfl                      = "!~/.config/git/bin/git-pushfl"
+  history-guard               = "!~/.config/git/bin/git-history-guard"
   branch-upstream             = "!~/.config/git/bin/git-branch-upstream"
   branch-remove-merged        = "!~/.config/git/bin/git-branch-remove-merged"
   branch-remove-merged-remote = "!~/.config/git/bin/git-branch-remove-merged-remote"

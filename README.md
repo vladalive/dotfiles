@@ -1,5 +1,34 @@
 # Dotfiles
 
+## Rebase and guarded pushes
+
+Refresh PR branches with rebase onto their actual base. `git pushfl [remote
+[branch:destination]]` publishes an authorized rewrite with both lease and
+include protection. It accepts only the current branch, one named remote and
+one branch destination; protected branches, mirror remotes, multiple push URLs,
+deletions and hook-bypass options are refused. Agent rewrites additionally require
+`agent-work-claims` to confirm ownership of the destination. It never merges or
+retries with weaker flags after a refusal. Missing tools or a policy denial must
+be reported, not bypassed.
+
+Enable the independent local history hook per repository:
+
+```sh
+~/.config/git/bin/git-history-guard install --base origin/master
+```
+
+Use the repository's actual default base. For stacked PRs explicitly set
+`git config branch.<destination>.agentsKitBase origin/<parent>` before pushing;
+the guard compares with that parent, including its proposed tip in a batch push.
+`git-history-guard check --base origin/<parent> --head HEAD` is also usable before
+opening a PR. `prkit open` checks its supplied PR base when this guard is enabled.
+Fetch base refs before checking. Unknown bases fail closed. The hook preserves
+existing hooks and their stdin; `uninstall` removes only its marked block and
+leaves the repository's history policy setting in place. This is a local policy,
+not a substitute for server-side protections or an authorization to bypass a
+refusal. Native PR merges and deliberately non-linear workflows need a separately
+agreed policy, not automatic exceptions invented by an agent.
+
 Personal dotfiles managed by [chezmoi](https://www.chezmoi.io/).
 
 The repository is the source of truth. Chezmoi applies source-state files from
