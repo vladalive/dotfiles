@@ -2,6 +2,7 @@
 # including non-interactive Claude, Codex, SSH, and cron processes.
 typeset -U path PATH
 path=(
+  "$HOME/.local/bin"
   "$HOME/.asdf/shims"
   "$HOME/.asdf/bin"
   /home/linuxbrew/.linuxbrew/bin
