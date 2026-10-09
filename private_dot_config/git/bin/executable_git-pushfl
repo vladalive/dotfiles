@@ -1,34 +1,89 @@
-#!/bin/sh
-# git pushfl [push args...]
-#
-# `push --force-with-lease` under a name that keeps the literal string
-# "git push --force" off the command line, so over-broad pre-push guards that
-# match on it do not block this safe lease push.
-#
-# Refuses the protected set: main, master, and whatever the branches.* config
-# names via `git env-branch-*`.
-#
-# --force-if-includes is passed explicitly, not left to push.useForceIfIncludes
-# in ~/.config/git/config.d/40-workflow.gitconfig, so the guard travels with the
-# script to a host where that config was never applied. Without it a lease is
-# not a guarantee here: worktrees share one .git, so a sibling session's push
-# updates the remote-tracking ref this lease is measured against, and the force
-# goes through over commits you never saw.
-set -eu
+#!/usr/bin/env ruby
+# frozen_string_literal: true
 
-branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+require 'open3'
 
-for protected in \
-  main \
-  master \
-  "$(git env-branch-master)" \
-  "$(git env-branch-develop)" \
-  "$(git env-branch-staging)" \
-  "$(git env-branch-production)"; do
-  if [ "$branch" = "$protected" ]; then
-    echo "pushfl: refusing force-with-lease on protected branch '$branch'" >&2
-    exit 1
-  fi
-done
+# A deliberately narrow push interface. It never disables hooks or weakens a
+# lease, and it resolves the destination before permitting a history rewrite.
+module PushFL
+  module_function
 
-exec git push --force-with-lease --force-if-includes "$@"
+  def git(*args)
+    out, _err, status = Open3.capture3('git', *args)
+    status.success? ? out.strip : nil
+  end
+
+  def run(args)
+    if args == ['--help']
+      puts 'Usage: git pushfl [--dry-run] [-u] [remote [current-branch:destination]]'
+      return 0
+    end
+    options = []
+    words = []
+    args.each do |arg|
+      if %w[--dry-run -n --set-upstream -u --quiet -q --verbose -v --porcelain].include?(arg)
+        options << arg
+      elsif arg.start_with?('-') || arg.start_with?('+')
+        raise ArgumentError, "unsupported push option #{arg}"
+      else
+        words << arg
+      end
+    end
+    raise ArgumentError, 'one remote and one branch refspec at most' if words.size > 2
+    branch = git('symbolic-ref', '--quiet', '--short', 'HEAD')
+    raise ArgumentError, 'detached HEAD; select the owned branch first' unless branch
+    remote = words[0] || git('config', "branch.#{branch}.pushRemote") ||
+             git('config', 'remote.pushDefault') || git('config', "branch.#{branch}.remote") || 'origin'
+    raise ArgumentError, 'use a configured named remote' unless git('remote').to_s.lines.map(&:strip).include?(remote)
+    raise ArgumentError, 'mirror remote is not allowed' if git('config', '--bool', "remote.#{remote}.mirror") == 'true'
+    urls = git('remote', 'get-url', '--push', '--all', remote).to_s.lines
+    raise ArgumentError, 'exactly one push destination URL is required' unless urls.size == 1
+    source, target, extra = (words[1] || branch).split(':', -1)
+    target ||= source
+    source = source.delete_prefix('refs/heads/')
+    target = target.delete_prefix('refs/heads/')
+    raise ArgumentError, 'only the current branch may be pushed' unless [branch, 'HEAD'].include?(source) && !extra
+    raise ArgumentError, 'destination must be a branch' unless git('check-ref-format', "refs/heads/#{target}") &&
+                                                                 !target.empty? && !target.start_with?('refs/')
+    protected = %w[main master develop staging production]
+    %w[master develop staging production].each { |name| protected << git('config', "branches.#{name}") }
+    protected << git('symbolic-ref', '--quiet', '--short', "refs/remotes/#{remote}/HEAD")&.delete_prefix("#{remote}/")
+    advertised, _err, status = Open3.capture3('git', 'ls-remote', '--symref', remote, 'HEAD')
+    raise ArgumentError, 'cannot inspect remote default branch; no push attempted' unless status.success?
+    protected << advertised[/^ref: refs\/heads\/(.+)\s+HEAD$/, 1]&.strip
+    [branch, target].each do |name|
+      raise ArgumentError, "refusing force-with-lease on protected branch '#{name}'" if protected.compact.include?(name)
+    end
+    check_claim(remote, branch, target)
+    # An explicit branch refspec prevents remote.*.push and matching defaults
+    # from adding hidden destinations. Git and pre-push hooks retain the final say.
+    exec('git', 'push', '--force-with-lease', '--force-if-includes', *options,
+         remote, "refs/heads/#{branch}:refs/heads/#{target}")
+  rescue ArgumentError => e
+    warn "pushfl: #{e.message}"
+    2
+  end
+
+  def check_claim(remote, branch, target)
+    agent = %w[CLAUDE_CODE_SESSION_ID CODEX_THREAD_ID OMNIGENT_RUNNER_PRIMARY_SESSION_ID AGENT_SESSION_ID]
+            .any? { |key| !ENV[key].to_s.strip.empty? }
+    return unless agent
+    raise ArgumentError, 'claim bypass is not allowed' unless ENV['AGENT_CLAIMS_BYPASS'].to_s.empty?
+
+    out, _err, status = Open3.capture3('git', 'ls-remote', '--heads', remote, "refs/heads/#{target}")
+    raise ArgumentError, 'cannot inspect remote branch; no push attempted' unless status.success?
+    old = out.split.first
+    return unless old
+
+    oid = git('rev-parse', "refs/heads/#{branch}")
+    return if git('merge-base', '--is-ancestor', old, oid)
+
+    input = "refs/heads/#{branch} #{oid} refs/heads/#{target} #{old}\n"
+    _out, err, status = Open3.capture3('agent-work-claims', 'pre-push', '--remote', remote, stdin_data: input)
+    raise ArgumentError, "claim check refused: #{err.strip}" unless status.success?
+  rescue Errno::ENOENT
+    raise ArgumentError, 'agent-work-claims is missing; cannot authorize a rewritten branch'
+  end
+end
+
+exit PushFL.run(ARGV) if $PROGRAM_NAME == __FILE__

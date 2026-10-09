@@ -1,0 +1,124 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+require 'open3'
+require 'optparse'
+require 'shellwords'
+require 'rbconfig'
+require 'fileutils'
+require 'tempfile'
+
+module HistoryGuard
+  START = '# >>> agents-kit linear-history >>>'
+  FINISH = '# <<< agents-kit linear-history <<<'
+  BLOCK = /^#{Regexp.escape(START)}\n.*?^#{Regexp.escape(FINISH)}\n/m
+  module_function
+
+  def git(*args)
+    out, err, status = Open3.capture3('git', *args)
+    raise ArgumentError, "git #{args.first} failed: #{err.lines.first}" unless status.success?
+    out.strip
+  end
+
+  def config(key)
+    out, _err, status = Open3.capture3('git', 'config', '--get', key)
+    status.success? ? out.strip : nil
+  end
+
+  def check(base, head)
+    raise ArgumentError, 'base is required; set branch.<destination>.agentsKitBase for a stack' if base.to_s.empty?
+    base_oid = resolve(base, 'base')
+    head_oid = resolve(head, 'head')
+    merges = git('rev-list', '--merges', "#{base_oid}..#{head_oid}").lines.map(&:strip)
+    return true if merges.empty?
+    warn "history-guard: merge commits in PR range #{base}..#{head}: #{merges.join(', ')}"
+    warn 'Update the branch with rebase, then git pushfl. A refused push is not permission to merge instead.'
+    false
+  end
+
+  def resolve(ref, label)
+    git('rev-parse', '--verify', '--end-of-options', "#{ref}^{commit}")
+  rescue ArgumentError
+    raise ArgumentError, "cannot resolve #{label} #{ref}; fetch the expected base before retrying"
+  end
+
+  def pre_push(input)
+    default = config('agentsKit.historyBase')
+    rows = input.lines.map(&:split)
+    proposed = rows.to_h { |r| [r[2], r[1]] }
+    rows.all? do |row|
+      raise ArgumentError, 'malformed pre-push input' unless row.size == 4
+      _local, oid, remote, _old = row
+      next true unless remote.start_with?('refs/heads/')
+      next true if oid.match?(/\A0+\z/)
+      branch = remote.delete_prefix('refs/heads/')
+      base = config("branch.#{branch}.agentsKitBase") || default
+      # If parent and child are pushed together, compare against the proposed parent.
+      parent = base.to_s.sub(%r{\Arefs/remotes/[^/]+/}, '').sub(%r{\Aorigin/}, '').delete_prefix('refs/heads/')
+      check(proposed["refs/heads/#{parent}"] || base, oid)
+    end
+  end
+
+  def manage(command, base)
+    dir = git('rev-parse', '--path-format=absolute', '--git-path', 'hooks')
+    path = File.join(dir, 'pre-push')
+    raise ArgumentError, 'refusing a symlink hook' if File.symlink?(path)
+    text = File.file?(path) ? File.read(path) : "#!/bin/sh\n"
+    if command == 'status'
+      puts(text.include?(START) ? 'installed' : 'missing')
+      return 0
+    end
+    raise ArgumentError, 'existing hook is not a shell script' unless text.lines.first.to_s.match?(%r{\A#!.*\b(?:sh|bash|dash|zsh)\s*$})
+    cleaned = text.gsub(BLOCK, '')
+    if command == 'install'
+      raise ArgumentError, 'install requires --base' unless base
+      git('rev-parse', '--verify', "#{base}^{commit}")
+      command_line = [RbConfig.ruby, File.realpath(__FILE__), 'pre-push'].shelljoin
+      block = <<~SH
+        #{START}
+        __kit_refs=$(mktemp) || exit 1
+        cat >"$__kit_refs" || { rm -f "$__kit_refs"; exit 1; }
+        if #{command_line} "$@" <"$__kit_refs"; then __kit_rc=0; else __kit_rc=$?; fi
+        exec 0<"$__kit_refs"
+        rm -f "$__kit_refs"
+        [ "$__kit_rc" -eq 0 ] || exit "$__kit_rc"
+        #{FINISH}
+      SH
+      first, rest = cleaned.split("\n", 2)
+      cleaned = "#{first}\n#{block}#{rest}"
+      git('config', '--local', 'agentsKit.historyBase', base)
+    end
+    FileUtils.mkdir_p(dir)
+    Tempfile.create(['history-guard', '.tmp'], dir) do |f|
+      f.chmod(File.exist?(path) ? File.stat(path).mode & 0o777 : 0o755)
+      f.write(cleaned)
+      f.flush
+      File.rename(f.path, path)
+    end
+    puts "#{command}: #{path}"
+    0
+  end
+
+  def run(args)
+    command = args.shift
+    base = nil
+    head = 'HEAD'
+    parser = OptionParser.new do |o|
+      o.banner = 'Usage: git-history-guard check --base REF [--head REF] | install --base REF | uninstall | status'
+      o.on('--base REF') { |v| base = v }
+      o.on('--head REF') { |v| head = v }
+      o.on('-h', '--help') { puts o; return 0 }
+    end
+    return pre_push($stdin.read) ? 0 : 1 if command == 'pre-push'
+    parser.parse!(args)
+    raise ArgumentError, 'unexpected arguments' unless args.empty?
+    case command
+    when 'check' then check(base, head) ? 0 : 1
+    when 'install', 'uninstall', 'status' then manage(command, base)
+    else puts parser; 2
+    end
+  rescue ArgumentError, OptionParser::ParseError, SystemCallError => e
+    warn "history-guard: #{e.message}"
+    2
+  end
+end
+exit HistoryGuard.run(ARGV) if $PROGRAM_NAME == __FILE__
