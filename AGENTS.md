@@ -74,6 +74,7 @@ Use `chezmoi diff` to inspect live drift. Use `chezmoi add <target>` or
 - `private_dot_config/` - source-state files applied into `$HOME/.config`
 - `private_dot_config/git/config.d/` - the Git configuration, one file per theme; `dot_gitconfig` holds identity and the include list and nothing else
 - `private_dot_config/git/bin/` - the Git helper scripts the aliases call; sh for thin wrappers, Ruby for anything that deletes
+- `private_dot_gnupg/private_gpg-agent.conf` - the only file managed in `~/.gnupg` (never keys): a one-year passphrase cache, so unattended agents can still sign commits a day after the key was unlocked. A running gpg-agent reads it only on reload, and a reload flushes every cached passphrase, so no `run_onchange_` script may reload it; the next agent start picks it up
 - `spec/` - RSpec coverage for the Ruby helpers, chezmoi-ignored
 - `test/bats/` - Bats coverage for the sh helpers, chezmoi-ignored
 - `bin/` - this repo's own tooling (`check`, `lint-shell`, `fmt-shell`, `test-bats`), chezmoi-ignored

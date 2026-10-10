@@ -79,6 +79,7 @@ chezmoi apply
 - `.chezmoiignore` - excludes repo docs, legacy dotbot layout, and vendored code from chezmoi target state
 - `dot_*` - source-state files applied into `$HOME`
 - `private_dot_config/` - source-state files applied into `$HOME/.config`
+- `private_dot_gnupg/private_gpg-agent.conf` - gpg-agent passphrase cache of a year, the only file managed in `~/.gnupg`
 - `symlink_dot_dotfiles.tmpl` - keeps `~/.dotfiles` pointing at the chezmoi source repo
 - `symlink_dot_janus.tmpl` - preserves the legacy Janus plugin symlink
 - `run_onchange_after_configure-gnome-input-sources.sh.tmpl` - configures GNOME XKB input sources as English/Russian with Latin Ctrl shortcuts
