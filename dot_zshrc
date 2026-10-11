@@ -95,3 +95,6 @@ if [ -z "${DOTFILES_SHELL_LOCAL_SOURCED:-}" ] && [ -s "$HOME/.shell.local" ]; th
 fi
 
 export PATH="$HOME/.bun/bin:$PATH"
+
+# opencode
+export PATH=/home/deployer/.opencode/bin:$PATH
