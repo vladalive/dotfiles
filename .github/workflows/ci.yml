@@ -9,7 +9,7 @@ on:
 jobs:
   shell:
     name: shellcheck, shfmt, bats
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Check out repository
@@ -42,7 +42,7 @@ jobs:
 
   ruby:
     name: rspec
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Check out repository
@@ -60,7 +60,7 @@ jobs:
 
   config:
     name: git config fragments
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Check out repository
