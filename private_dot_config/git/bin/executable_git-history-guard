@@ -29,9 +29,34 @@ module HistoryGuard
     base_oid = resolve(base, 'base')
     head_oid = resolve(head, 'head')
     merges = git('rev-list', '--merges', "#{base_oid}..#{head_oid}").lines.map(&:strip)
-    return true if merges.empty?
-    warn "history-guard: merge commits in PR range #{base}..#{head}: #{merges.join(', ')}"
-    warn 'Update the branch with rebase, then git pushfl. A refused push is not permission to merge instead.'
+    unless merges.empty?
+      warn "history-guard: merge commits in PR range #{base}..#{head}: #{merges.join(', ')}"
+      warn 'Update the branch with rebase, then git pushfl. A refused push is not permission to merge instead.'
+      return false
+    end
+    signed?(base, head, base_oid, head_oid)
+  end
+
+  # Where commits are meant to be signed, our own commits in the range must
+  # carry a signature: queue sessions pushed commits made with
+  # -c commit.gpgsign=false while GPG was broken (2026-10-16). Someone else's
+  # commit is theirs to sign. Only the header is read, so gpg is not needed.
+  def signed?(base, head, base_oid, head_oid)
+    return true unless git('config', '--type=bool', '--default', 'false', 'commit.gpgsign') == 'true'
+
+    me = config('user.email')
+    unsigned = git('log', '--format=%H %ce', "#{base_oid}..#{head_oid}").lines.map(&:split).filter_map do |oid, email|
+      next if me && email != me
+      next if git('cat-file', 'commit', oid).split("\n\n", 2).first.match?(/^gpgsig(?:-sha256)? /)
+
+      oid[0, 10]
+    end
+    return true if unsigned.empty?
+
+    warn "history-guard: unsigned commits in #{base}..#{head}: #{unsigned.join(', ')}"
+    warn 'Sign them without changing anything else: ' \
+         "git rebase --force-rebase --gpg-sign $(git merge-base HEAD #{base}), then git pushfl."
+    warn 'If gpg cannot sign, stop and report it. A refused push is not permission to turn signing off.'
     false
   end
 
