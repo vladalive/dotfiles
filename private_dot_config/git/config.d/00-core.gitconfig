@@ -9,6 +9,8 @@
 
 [init]
   defaultBranch = master
+  # Every new clone gets the pre-push hook that refuses our unsigned commits.
+  templateDir = ~/.config/git/template
 
 [rerere]
   enabled = 1

@@ -84,8 +84,8 @@ module HistoryGuard
     raise ArgumentError, "cannot resolve #{label} #{ref}; fetch the expected base before retrying"
   end
 
-  def pre_push(input)
-    return signatures_pushed(input) if config('agentsKit.historyChecks') == 'signatures'
+  def pre_push(input, signatures_only: false)
+    return signatures_pushed(input) if signatures_only || config('agentsKit.historyChecks') == 'signatures'
 
     default = config('agentsKit.historyBase')
     rows = input.lines.map(&:split)
@@ -109,7 +109,8 @@ module HistoryGuard
     raise ArgumentError, 'refusing a symlink hook' if File.symlink?(path)
     text = File.file?(path) ? File.read(path) : "#!/bin/sh\n"
     if command == 'status'
-      only = config('agentsKit.historyChecks') == 'signatures' ? ' (signatures only)' : ''
+      only = text.include?('pre-push --signatures-only') || config('agentsKit.historyChecks') == 'signatures'
+      only = only ? ' (signatures only)' : ''
       puts(text.include?(START) ? "installed#{only}" : 'missing')
       return 0
     end
@@ -120,7 +121,7 @@ module HistoryGuard
       git('rev-parse', '--verify', "#{base}^{commit}")
     end
     if command == 'install'
-      command_line = [RbConfig.ruby, File.realpath(__FILE__), 'pre-push'].shelljoin
+      command_line = [RbConfig.ruby, File.realpath(__FILE__), 'pre-push', *('--signatures-only' if signatures_only)].shelljoin
       block = <<~SH
         #{START}
         __kit_refs=$(mktemp) || exit 1
@@ -166,7 +167,11 @@ module HistoryGuard
       o.on('--head REF') { |v| head = v }
       o.on('-h', '--help') { puts o; return 0 }
     end
-    return pre_push($stdin.read) ? 0 : 1 if command == 'pre-push'
+    # git passes the remote's name and URL after the flag the hook adds.
+    if command == 'pre-push'
+      only = !args.delete('--signatures-only').nil?
+      return pre_push($stdin.read, signatures_only: only) ? 0 : 1
+    end
     parser.parse!(args)
     raise ArgumentError, 'unexpected arguments' unless args.empty?
     case command

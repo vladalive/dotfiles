@@ -44,6 +44,12 @@ only that check, with no base:
 It reads what the push sends that no remote branch has yet, so a local merge
 passes and commits already on the remote are not held against a new push.
 
+Every new `git init` and `git clone` gets that hook from
+`~/.config/git/template` (`init.templateDir` in `00-core.gitconfig`). A
+repository cloned before this keeps whatever hook it had; install it there by
+hand. The template also carries git's own `description` and `info/exclude`,
+which a custom template directory would otherwise drop.
+
 Personal dotfiles managed by [chezmoi](https://www.chezmoi.io/).
 
 The repository is the source of truth. Chezmoi applies source-state files from

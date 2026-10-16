@@ -1,0 +1,12 @@
+#!/bin/sh
+# Copied into every new repository by init.templateDir (00-core.gitconfig):
+# refuses pushing our own unsigned commits. git history-guard status / install
+# / uninstall manage this block like one they wrote.
+# >>> agents-kit linear-history >>>
+__kit_refs=$(mktemp) || exit 1
+cat >"$__kit_refs" || { rm -f "$__kit_refs"; exit 1; }
+if "$HOME/.config/git/bin/git-history-guard" pre-push --signatures-only "$@" <"$__kit_refs"; then __kit_rc=0; else __kit_rc=$?; fi
+exec 0<"$__kit_refs"
+rm -f "$__kit_refs"
+[ "$__kit_rc" -eq 0 ] || exit "$__kit_rc"
+# <<< agents-kit linear-history <<<

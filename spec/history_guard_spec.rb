@@ -120,6 +120,7 @@ RSpec.describe 'git-history-guard' do
         repo, = guarded('status')
         out, = run_script('git-history-guard', 'status', chdir: repo)
         expect(out).to eq("installed (signatures only)\n")
+        expect(File.read(File.join(repo, '.git/hooks/pre-push'))).to include('pre-push --signatures-only')
       end
 
       it 'refuses an unsigned commit the push sends, with a rebase that keeps merges' do
@@ -166,6 +167,57 @@ RSpec.describe 'git-history-guard' do
       expect(status.success?).to be(false)
       expect(err).to include('unsigned')
       expect(remote_branches(remote)).not_to include('feature')
+    end
+  end
+
+  # init.templateDir hands every new clone the signatures-only hook, so a
+  # repository nobody remembered to set up is covered from its first push.
+  describe 'clone template' do
+    let(:template_source) { File.expand_path('../private_dot_config/git/template', __dir__) }
+
+    # What chezmoi writes from the source: an executable_ name loses the prefix and gets 0755.
+    def applied_template
+      target = File.join(sandbox, 'template')
+      Dir.glob('**/*', base: template_source).each do |rel|
+        src = File.join(template_source, rel)
+        next if File.directory?(src)
+
+        name = File.basename(rel)
+        dest = File.join(target, File.dirname(rel), name.delete_prefix('executable_'))
+        FileUtils.mkdir_p(File.dirname(dest))
+        FileUtils.cp(src, dest)
+        File.chmod(name.start_with?('executable_') ? 0o755 : 0o644, dest)
+      end
+      bin = File.join(sandbox, '.config/git/bin')
+      FileUtils.mkdir_p(bin)
+      FileUtils.cp(File.join(SCRIPT_DIR, 'executable_git-history-guard'), File.join(bin, 'git-history-guard'))
+      File.chmod(0o755, File.join(bin, 'git-history-guard'))
+      target
+    end
+
+    it 'gives a new repository the signatures-only hook, which refuses an unsigned push' do
+      repo = File.join(sandbox, 'fresh')
+      git!(sandbox, 'init', '-q', '-b', 'master', "--template=#{applied_template}", repo)
+      git!(repo, 'config', 'commit.gpgsign', 'false')
+      write_commit(repo, 'a.txt', 'a', 'first')
+      remote = create_bare_repo('fresh.git')
+      git!(repo, 'remote', 'add', 'origin', remote)
+      git!(repo, 'push', '-q', 'origin', 'master')
+      out, = run_script('git-history-guard', 'status', chdir: repo)
+      expect(out).to eq("installed (signatures only)\n")
+
+      write_commit(repo, 'b.txt', 'b', 'second')
+      git!(repo, 'config', 'commit.gpgsign', 'true')
+      _, err, status = Open3.capture3(git_env, 'git', 'push', 'origin', 'master', chdir: repo)
+      expect(status.success?).to be(false)
+      expect(err).to include('unsigned')
+      expect(File).to exist(File.join(repo, '.git/info/exclude'))
+    end
+
+    it 'is where the git config points init' do
+      fragment = File.expand_path('../private_dot_config/git/config.d/00-core.gitconfig', __dir__)
+      out, = Open3.capture2('git', 'config', '--file', fragment, '--get', 'init.templateDir')
+      expect(out.strip).to eq('~/.config/git/template')
     end
   end
 end
