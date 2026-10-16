@@ -19,6 +19,10 @@ module HistoryGuard
     out.strip
   end
 
+  def unset(key)
+    Open3.capture3('git', 'config', '--local', '--unset', key)
+  end
+
   def config(key)
     out, _err, status = Open3.capture3('git', 'config', '--get', key)
     status.success? ? out.strip : nil
@@ -34,30 +38,44 @@ module HistoryGuard
       warn 'Update the branch with rebase, then git pushfl. A refused push is not permission to merge instead.'
       return false
     end
-    signed?(base, head, base_oid, head_oid)
+    signed?("#{base}..#{head}", ["#{base_oid}..#{head_oid}"])
   end
 
   # Where commits are meant to be signed, our own commits in the range must
   # carry a signature: queue sessions pushed commits made with
   # -c commit.gpgsign=false while GPG was broken (2026-10-16). Someone else's
   # commit is theirs to sign. Only the header is read, so gpg is not needed.
-  def signed?(base, head, base_oid, head_oid)
+  def signed?(label, revs)
     return true unless git('config', '--type=bool', '--default', 'false', 'commit.gpgsign') == 'true'
 
     me = config('user.email')
-    unsigned = git('log', '--format=%H %ce', "#{base_oid}..#{head_oid}").lines.map(&:split).filter_map do |oid, email|
+    unsigned = git('log', '--format=%H %ce', *revs).lines.map(&:split).filter_map do |oid, email|
       next if me && email != me
       next if git('cat-file', 'commit', oid).split("\n\n", 2).first.match?(/^gpgsig(?:-sha256)? /)
 
-      oid[0, 10]
+      oid
     end
     return true if unsigned.empty?
 
-    warn "history-guard: unsigned commits in #{base}..#{head}: #{unsigned.join(', ')}"
+    warn "history-guard: unsigned commits in #{label}: #{unsigned.map { |o| o[0, 10] }.join(', ')}"
     warn 'Sign them without changing anything else: ' \
-         "git rebase --force-rebase --gpg-sign $(git merge-base HEAD #{base}), then git pushfl."
-    warn 'If gpg cannot sign, stop and report it. A refused push is not permission to turn signing off.'
+         "git rebase --rebase-merges --force-rebase --gpg-sign #{unsigned.last[0, 10]}^, then git pushfl."
+    warn 'Already on the remote? git fetch, then push again. ' \
+         'If gpg cannot sign, stop and report it: a refused push is not permission to turn signing off.'
     false
+  end
+
+  # A signatures-only install checks what the push sends that no remote branch
+  # has yet, so it needs no base and lets a local merge through.
+  def signatures_pushed(input)
+    input.lines.map(&:split).all? do |row|
+      raise ArgumentError, 'malformed pre-push input' unless row.size == 4
+      _local, oid, remote, _old = row
+      next true unless remote.start_with?('refs/heads/')
+      next true if oid.match?(/\A0+\z/)
+
+      signed?("the push to #{remote.delete_prefix('refs/heads/')}", [oid, '--not', '--remotes'])
+    end
   end
 
   def resolve(ref, label)
@@ -67,6 +85,8 @@ module HistoryGuard
   end
 
   def pre_push(input)
+    return signatures_pushed(input) if config('agentsKit.historyChecks') == 'signatures'
+
     default = config('agentsKit.historyBase')
     rows = input.lines.map(&:split)
     proposed = rows.to_h { |r| [r[2], r[1]] }
@@ -83,20 +103,23 @@ module HistoryGuard
     end
   end
 
-  def manage(command, base)
+  def manage(command, base, signatures_only: false)
     dir = git('rev-parse', '--path-format=absolute', '--git-path', 'hooks')
     path = File.join(dir, 'pre-push')
     raise ArgumentError, 'refusing a symlink hook' if File.symlink?(path)
     text = File.file?(path) ? File.read(path) : "#!/bin/sh\n"
     if command == 'status'
-      puts(text.include?(START) ? 'installed' : 'missing')
+      only = config('agentsKit.historyChecks') == 'signatures' ? ' (signatures only)' : ''
+      puts(text.include?(START) ? "installed#{only}" : 'missing')
       return 0
     end
     raise ArgumentError, 'existing hook is not a shell script' unless text.lines.first.to_s.match?(%r{\A#!.*\b(?:sh|bash|dash|zsh)\s*$})
     cleaned = text.gsub(BLOCK, '')
-    if command == 'install'
-      raise ArgumentError, 'install requires --base' unless base
+    if command == 'install' && !signatures_only
+      raise ArgumentError, 'install requires --base or --signatures-only' unless base
       git('rev-parse', '--verify', "#{base}^{commit}")
+    end
+    if command == 'install'
       command_line = [RbConfig.ruby, File.realpath(__FILE__), 'pre-push'].shelljoin
       block = <<~SH
         #{START}
@@ -110,7 +133,14 @@ module HistoryGuard
       SH
       first, rest = cleaned.split("\n", 2)
       cleaned = "#{first}\n#{block}#{rest}"
-      git('config', '--local', 'agentsKit.historyBase', base)
+      if signatures_only
+        git('config', '--local', 'agentsKit.historyChecks', 'signatures')
+      else
+        git('config', '--local', 'agentsKit.historyBase', base)
+        unset('agentsKit.historyChecks')
+      end
+    else
+      unset('agentsKit.historyChecks')
     end
     FileUtils.mkdir_p(dir)
     Tempfile.create(['history-guard', '.tmp'], dir) do |f|
@@ -127,9 +157,12 @@ module HistoryGuard
     command = args.shift
     base = nil
     head = 'HEAD'
+    signatures_only = false
     parser = OptionParser.new do |o|
-      o.banner = 'Usage: git-history-guard check --base REF [--head REF] | install --base REF | uninstall | status'
+      o.banner = 'Usage: git-history-guard check --base REF [--head REF] | ' \
+                 'install --base REF | install --signatures-only | uninstall | status'
       o.on('--base REF') { |v| base = v }
+      o.on('--signatures-only') { signatures_only = true }
       o.on('--head REF') { |v| head = v }
       o.on('-h', '--help') { puts o; return 0 }
     end
@@ -138,7 +171,7 @@ module HistoryGuard
     raise ArgumentError, 'unexpected arguments' unless args.empty?
     case command
     when 'check' then check(base, head) ? 0 : 1
-    when 'install', 'uninstall', 'status' then manage(command, base)
+    when 'install', 'uninstall', 'status' then manage(command, base, signatures_only: signatures_only)
     else puts parser; 2
     end
   rescue ArgumentError, OptionParser::ParseError, SystemCallError => e

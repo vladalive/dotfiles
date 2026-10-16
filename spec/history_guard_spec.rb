@@ -79,7 +79,7 @@ RSpec.describe 'git-history-guard' do
     it 'refuses an unsigned commit of ours where commits are meant to be signed' do
       _, err, status = run_script('git-history-guard', 'check', '--base', 'master', chdir: unsigned_branch)
       expect(status.exitstatus).to eq(1)
-      expect(err).to include('unsigned', 'rebase --force-rebase --gpg-sign $(git merge-base HEAD master)')
+      expect(err).to include('unsigned', 'git rebase --rebase-merges --force-rebase --gpg-sign ')
     end
 
     it 'accepts a signed commit, and a host that does not sign' do
@@ -101,6 +101,59 @@ RSpec.describe 'git-history-guard' do
       git!(repo, 'config', 'commit.gpgsign', 'true')
       _, err, status = run_script('git-history-guard', 'check', '--base', 'master', chdir: repo)
       expect(status.success?).to be(true), err
+    end
+
+    # For repositories that merge locally (sandbox): only signatures, and only
+    # for what the push sends that no remote branch has yet.
+    describe 'signatures-only install' do
+      def guarded(name)
+        repo = create_repo(name)
+        remote = create_bare_repo("#{name}.git")
+        git!(repo, 'remote', 'add', 'origin', remote)
+        git!(repo, 'push', '-q', 'origin', 'master')
+        _, err, status = run_script('git-history-guard', 'install', '--signatures-only', chdir: repo)
+        raise err unless status.success?
+        [repo, remote]
+      end
+
+      it 'needs no base and says so in its status' do
+        repo, = guarded('status')
+        out, = run_script('git-history-guard', 'status', chdir: repo)
+        expect(out).to eq("installed (signatures only)\n")
+      end
+
+      it 'refuses an unsigned commit the push sends, with a rebase that keeps merges' do
+        repo, remote = guarded('refuse')
+        write_commit(repo, 'new.txt', 'new', 'new')
+        git!(repo, 'config', 'commit.gpgsign', 'true')
+        _, err, status = Open3.capture3(git_env, 'git', 'push', 'origin', 'master', chdir: repo)
+        expect(status.success?).to be(false)
+        expect(err).to include('unsigned', '--rebase-merges')
+        expect(git!(remote, 'log', '--format=%s', 'master')).not_to include('new')
+      end
+
+      it 'lets a local merge through' do
+        repo, remote = guarded('merge')
+        git!(repo, 'checkout', '-qb', 'side')
+        write_commit(repo, 'side.txt', 'side', 'side')
+        git!(repo, 'checkout', '-q', 'master')
+        write_commit(repo, 'main.txt', 'main', 'main')
+        git!(repo, 'merge', '-q', '--no-ff', '-m', 'local merge', 'side')
+        _, err, status = Open3.capture3(git_env, 'git', 'push', 'origin', 'master', chdir: repo)
+        expect(status.success?).to be(true), err
+        expect(git!(remote, 'log', '--format=%s', 'master')).to include('local merge')
+      end
+
+      it 'does not hold a push to account for commits the remote already has' do
+        repo, = guarded('old')
+        write_commit(repo, 'old.txt', 'old', 'old unsigned')
+        git!(repo, 'push', '-q', 'origin', 'master')
+        write_commit(repo, 'next.txt', 'next', 'next')
+        git!(repo, 'update-ref', 'refs/heads/master', signed_copy(repo, 'HEAD'))
+        git!(repo, 'config', 'commit.gpgsign', 'true')
+        _, err, status = Open3.capture3(git_env, 'git', 'push', 'origin', 'master', chdir: repo)
+        expect(status.success?).to be(true), err
+      end
     end
 
     it 'blocks the actual push' do
