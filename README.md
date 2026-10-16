@@ -17,6 +17,9 @@ Enable the independent local history hook per repository:
 ~/.config/git/bin/git-history-guard install --base origin/master
 ```
 
+`git-history-guard status` prints `installed`, `installed (signatures only)` or
+`missing`.
+
 Use the repository's actual default base. For stacked PRs explicitly set
 `git config branch.<destination>.agentsKitBase origin/<parent>` before pushing;
 the guard compares with that parent, including its proposed tip in a batch push.
@@ -28,6 +31,18 @@ leaves the repository's history policy setting in place. This is a local policy,
 not a substitute for server-side protections or an authorization to bypass a
 refusal. Native PR merges and deliberately non-linear workflows need a separately
 agreed policy, not automatic exceptions invented by an agent.
+
+Where `commit.gpgsign` is on, the guard also refuses a commit of this
+repository's `user.email` that carries no signature; it names the commits and
+the rebase that signs them. A repository that merges branches locally takes
+only that check, with no base:
+
+```sh
+~/.config/git/bin/git-history-guard install --signatures-only
+```
+
+It reads what the push sends that no remote branch has yet, so a local merge
+passes and commits already on the remote are not held against a new push.
 
 Personal dotfiles managed by [chezmoi](https://www.chezmoi.io/).
 
