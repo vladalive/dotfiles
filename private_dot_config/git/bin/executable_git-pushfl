@@ -54,6 +54,7 @@ module PushFL
     [branch, target].each do |name|
       raise ArgumentError, "refusing force-with-lease on protected branch '#{name}'" if protected.compact.include?(name)
     end
+    check_cross_named_rewrite(remote, branch, target) unless target == branch
     check_claim(remote, branch, target)
     # An explicit branch refspec prevents remote.*.push and matching defaults
     # from adding hidden destinations. Git and pre-push hooks retain the final say.
@@ -64,15 +65,33 @@ module PushFL
     2
   end
 
+  def remote_tip(remote, target)
+    out, _err, status = Open3.capture3('git', 'ls-remote', '--heads', remote, "refs/heads/#{target}")
+    raise ArgumentError, 'cannot inspect remote branch; no push attempted' unless status.success?
+    out.split.first
+  end
+
+  # --force-if-includes judges a rewrite by the reflog of the local branch named
+  # like the destination, never the branch pushed. Pushed as scratch:<target>, a
+  # rewrite is refused with "remote ref updated since checkout" (which reads like
+  # a concurrent push), or let through on the reflog of an unrelated <target>.
+  def check_cross_named_rewrite(remote, branch, target)
+    old = remote_tip(remote, target)
+    return if old.nil? || git('merge-base', '--is-ancestor', old, "refs/heads/#{branch}")
+
+    raise ArgumentError, "a rewrite pushed as #{branch}:#{target} is judged by refs/heads/#{target}'s reflog " \
+                         "(--force-if-includes), not by '#{branch}'. Push from a branch named '#{target}': in " \
+                         "its worktree run git fetch #{remote} && git reset --keep #{remote}/#{target}, redo the " \
+                         'rebase there, then git pushfl.'
+  end
+
   def check_claim(remote, branch, target)
     agent = %w[CLAUDE_CODE_SESSION_ID CODEX_THREAD_ID OMNIGENT_RUNNER_PRIMARY_SESSION_ID AGENT_SESSION_ID]
             .any? { |key| !ENV[key].to_s.strip.empty? }
     return unless agent
     raise ArgumentError, 'claim bypass is not allowed' unless ENV['AGENT_CLAIMS_BYPASS'].to_s.empty?
 
-    out, _err, status = Open3.capture3('git', 'ls-remote', '--heads', remote, "refs/heads/#{target}")
-    raise ArgumentError, 'cannot inspect remote branch; no push attempted' unless status.success?
-    old = out.split.first
+    old = remote_tip(remote, target)
     return unless old
 
     oid = git('rev-parse', "refs/heads/#{branch}")

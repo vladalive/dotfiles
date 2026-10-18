@@ -181,3 +181,36 @@ teardown() {
   [ "$status" -eq 0 ]
   [[ "$(git -C "${SANDBOX}/origin.git" log --format=%s card)" == *'session B: bug fix'* ]]
 }
+
+# p-2026-10-19-001: --force-if-includes reads the reflog of the local branch
+# named like the destination, never the one pushed, so a rebase published from
+# a scratch branch is refused with a message that reads like a concurrent push.
+# Two sessions lost a diagnosis loop to it; say which branch to push from.
+@test "refuses a rewrite pushed from a differently named branch, naming the fix" {
+  git checkout -q -b card
+  commit_file card.txt 'work' 'card work'
+  git push -q origin card
+
+  git checkout -q -b scratch
+  git commit -q --amend -m 'card work, rebased in a scratch branch'
+
+  run script git-pushfl origin scratch:card
+
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"Push from a branch named 'card'"* ]]
+  [ "$(git -C "${SANDBOX}/origin.git" log -1 --format=%s card)" = 'card work' ]
+}
+
+@test "still fast-forwards a destination from a differently named branch" {
+  git checkout -q -b card
+  commit_file card.txt 'work' 'card work'
+  git push -q origin card
+
+  git checkout -q -b scratch
+  commit_file card.txt 'more work' 'card work, continued'
+
+  run script git-pushfl origin scratch:card
+
+  [ "$status" -eq 0 ]
+  [ "$(git -C "${SANDBOX}/origin.git" log -1 --format=%s card)" = 'card work, continued' ]
+}
