@@ -50,6 +50,14 @@ repository cloned before this keeps whatever hook it had; install it there by
 hand. The template also carries git's own `description` and `info/exclude`,
 which a custom template directory would otherwise drop.
 
+Both installs also refuse creating a branch on a remote under a tool's own
+name - `wt/*`, `worktree-<8 hex>`, `auto/*`, `backup/*` - and, in a repository
+not owned by `vladalive`, a name carrying an agents-backlog number
+(`backlog-184`, `ab184-`). A branch is named after its task:
+`<card or issue>-<slug>`. A push to a branch that already exists on the remote
+is never refused, so an open PR keeps working. `GIT_BRANCH_NAME_BYPASS=1`
+lets one push through.
+
 Personal dotfiles managed by [chezmoi](https://www.chezmoi.io/).
 
 The repository is the source of truth. Chezmoi applies source-state files from

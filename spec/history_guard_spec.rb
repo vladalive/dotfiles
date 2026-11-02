@@ -170,6 +170,91 @@ RSpec.describe 'git-history-guard' do
     end
   end
 
+  # A branch is named after its task, not after the tool that cut it: 441 agent
+  # branches named wt/*, worktree-<hash>, auto/* and backup/* reached GitHub and
+  # stayed there (2026-11-02). Only creating such a branch on a remote is
+  # refused; a push to one that already exists goes through.
+  describe 'branch names' do
+    def guarded(name)
+      repo = create_repo(name)
+      remote = create_bare_repo("#{name}.git")
+      git!(repo, 'remote', 'add', 'origin', remote)
+      git!(repo, 'push', '-q', 'origin', 'master')
+      _, err, status = run_script('git-history-guard', 'install', '--signatures-only', chdir: repo)
+      raise err unless status.success?
+      [repo, remote]
+    end
+
+    def push(repo, branch, env: {})
+      git!(repo, 'branch', '-f', branch, 'master')
+      Open3.capture3(git_env.merge(env), 'git', 'push', 'origin', branch, chdir: repo)
+    end
+
+    def hook(stdin, url, chdir:)
+      Open3.capture3(git_env, RbConfig.ruby, File.join(SCRIPT_DIR, 'executable_git-history-guard'),
+                     'pre-push', '--signatures-only', 'origin', url, stdin_data: stdin, chdir: chdir)
+    end
+
+    %w[worktree-d6b152ed wt/fix-login auto/529e909b/20261102T033000 backup/8508-audit-74b5c9666a].each do |name|
+      it "refuses creating #{name} on the remote and says how to rename it" do
+        repo, remote = guarded('tool')
+        _, err, status = push(repo, name)
+        expect(status.success?).to be(false)
+        expect(err).to include(name, 'git branch -m', 'GIT_BRANCH_NAME_BYPASS=1')
+        expect(remote_branches(remote)).not_to include(name)
+      end
+    end
+
+    it 'lets a task-named branch through' do
+      repo, remote = guarded('task')
+      _, err, status = push(repo, '8508-audit-coverage-matrix')
+      expect(status.success?).to be(true), err
+      expect(remote_branches(remote)).to include('8508-audit-coverage-matrix')
+    end
+
+    it 'lets a push to a branch that already exists on the remote through' do
+      repo, remote = guarded('existing')
+      _, err, status = push(repo, 'wt/old', env: { 'GIT_BRANCH_NAME_BYPASS' => '1' })
+      expect(status.success?).to be(true), err
+      git!(repo, 'checkout', '-q', 'wt/old')
+      write_commit(repo, 'more.txt', 'more', 'more')
+      _, err, status = Open3.capture3(git_env, 'git', 'push', 'origin', 'wt/old', chdir: repo)
+      expect(status.success?).to be(true), err
+      expect(remote_branches(remote)).to include('wt/old')
+    end
+
+    it 'lets a deletion of such a branch through' do
+      repo, remote = guarded('delete')
+      push(repo, 'backup/x', env: { 'GIT_BRANCH_NAME_BYPASS' => '1' })
+      _, err, status = Open3.capture3(git_env, 'git', 'push', 'origin', '--delete', 'backup/x', chdir: repo)
+      expect(status.success?).to be(true), err
+      expect(remote_branches(remote)).not_to include('backup/x')
+    end
+
+    # agents-backlog is private to vladalive: its numbers stay out of other
+    # owners' repositories, branch names included (PR #11544, 2026-11-02).
+    describe 'backlog numbers' do
+      let(:repo) { create_repo('backlog') }
+      let(:sha) { git!(repo, 'rev-parse', 'HEAD').strip }
+      let(:zero) { '0' * 40 }
+
+      it "refuses a new branch naming the backlog in another owner's repository" do
+        line = "refs/heads/x #{sha} refs/heads/agents-backlog-184-audit #{zero}\n"
+        _, err, status = hook(line, 'git@github.com:nimbleind/statusgator-core.git', chdir: repo)
+        expect(status.exitstatus).to eq(1)
+        expect(err).to include('agents-backlog-184-audit', 'private')
+      end
+
+      it 'allows it in a vladalive repository, over ssh or https' do
+        line = "refs/heads/x #{sha} refs/heads/agents-backlog-184-audit #{zero}\n"
+        %w[git@github.com:vladalive/agents-kit.git https://github.com/vladalive/sandbox].each do |url|
+          _, err, status = hook(line, url, chdir: repo)
+          expect(status.success?).to be(true), err
+        end
+      end
+    end
+  end
+
   # init.templateDir hands every new clone the signatures-only hook, so a
   # repository nobody remembered to set up is covered from its first push.
   describe 'clone template' do

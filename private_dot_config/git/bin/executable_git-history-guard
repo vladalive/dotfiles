@@ -84,7 +84,45 @@ module HistoryGuard
     raise ArgumentError, "cannot resolve #{label} #{ref}; fetch the expected base before retrying"
   end
 
-  def pre_push(input, signatures_only: false)
+  # A branch is named after its task, never after the tool that cut it. These
+  # are the tools' own names: 441 of them reached GitHub and stayed there until
+  # a hand cleanup on 2026-11-02. Only creating one on a remote is refused, so
+  # an open PR whose branch already has such a name keeps taking pushes.
+  TOOL_NAMES = {
+    %r{\Awt/} => 'the omnigent-dispatch worktree prefix',
+    /\Aworktree-\h{8}\z/ => "Claude Code's worktree name",
+    %r{\Aauto/} => "the omnigent scheduler's run branch",
+    %r{\Abackup/} => 'a local backup; keep one in the reflog or refs/backup/ instead'
+  }.freeze
+  # agents-backlog is private to vladalive, so its numbers stay out of other
+  # owners' repositories - branch names included (statusgator-core #11544).
+  BACKLOG = /(?:\A|[-_\/])(?:agents-)?backlog-\d+|\Aab\d+-/i
+  BACKLOG_OWNERS = %w[vladalive].freeze
+  BYPASS = 'GIT_BRANCH_NAME_BYPASS'
+
+  def branch_names_ok?(input, url)
+    return true if ENV[BYPASS] == '1'
+
+    owner = url.to_s[%r{github\.com[:/]([^/]+)/}, 1]
+    refused = input.lines.map(&:split).filter_map do |_local, oid, remote, old|
+      next unless remote.to_s.start_with?('refs/heads/') && old.to_s.match?(/\A0+\z/) && !oid.to_s.match?(/\A0+\z/)
+
+      name = remote.delete_prefix('refs/heads/')
+      why = TOOL_NAMES.find { |pattern, _| name.match?(pattern) }&.last
+      why ||= 'an agents-backlog number, which is private to vladalive' if owner && !BACKLOG_OWNERS.include?(owner) && name.match?(BACKLOG)
+      [name, why] if why
+    end
+    return true if refused.empty?
+
+    refused.each { |name, why| warn "history-guard: refusing to create branch #{name} on the remote: #{why}." }
+    warn 'Name the branch after its task - <card or issue>-<slug> (8508-audit-coverage-matrix), or a plain slug ' \
+         'when there is no task - then push again: git branch -m <old> <new> && git push -u origin <new>'
+    warn "A person who really wants this name: #{BYPASS}=1 git push ..."
+    false
+  end
+
+  def pre_push(input, signatures_only: false, url: nil)
+    return false unless branch_names_ok?(input, url)
     return signatures_pushed(input) if signatures_only || config('agentsKit.historyChecks') == 'signatures'
 
     default = config('agentsKit.historyBase')
@@ -170,7 +208,7 @@ module HistoryGuard
     # git passes the remote's name and URL after the flag the hook adds.
     if command == 'pre-push'
       only = !args.delete('--signatures-only').nil?
-      return pre_push($stdin.read, signatures_only: only) ? 0 : 1
+      return pre_push($stdin.read, signatures_only: only, url: args[1]) ? 0 : 1
     end
     parser.parse!(args)
     raise ArgumentError, 'unexpected arguments' unless args.empty?
