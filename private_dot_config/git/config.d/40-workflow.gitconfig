@@ -14,6 +14,13 @@
   # --force-with-lease is in play, so ordinary pushes are unaffected.
   useForceIfIncludes = true
 
+[fetch]
+  # Drop remote-tracking refs whose branch is gone from the remote. Without it
+  # statusgator-core held 893 origin/* refs for 697 real branches (2026-11-02),
+  # and tools that look a branch up by name (the card resolver's `<n>-*`) kept
+  # finding branches that no longer exist.
+  prune = true
+
 [pull]
   rebase = true
   ff = only
