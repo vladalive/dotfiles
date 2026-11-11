@@ -1,0 +1,11 @@
+[Unit]
+Description=Keep the commit-signing GPG key unlocked: after start-up, then hourly
+
+[Timer]
+# A minute after the user manager starts (boot, WSL start), then every hour:
+# a gpg-agent restart in between empties the cache, the next run refills it.
+OnStartupSec=1min
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=timers.target

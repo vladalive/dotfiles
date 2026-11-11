@@ -1,0 +1,116 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# gpg-preset-signing [--check]
+#
+# Unlock this host's commit-signing key in gpg-agent with the passphrase kept in
+# Bitwarden Secrets Manager, so agents can sign commits after a reboot, a WSL
+# restart or a gpg-agent restart without anyone typing it. Until 2026-11-12 the
+# one-year cache in gpg-agent.conf survived only as long as the agent: NewBlack's
+# WSL restarts emptied it, and every agent there stopped at its next commit.
+#
+# The passphrase lives at
+#   services/gpg-signing/local/production/GPG_PASSPHRASE_<KEYID>
+# where KEYID is the 16-hex long id of git's user.signingkey - each host has its
+# own key. It sits outside envs/ so it is not exported into every shell. Store it
+# once, typed at a hidden prompt:
+#   envs exec BWS_ACCESS_TOKEN -- bws-envs secret set services/gpg-signing/local/production/GPG_PASSPHRASE_<KEYID>
+#
+# --check only reports whether the key is unlocked.
+#
+# Exit: 0 unlocked (already, or now), 3 no passphrase stored for this key yet,
+# 1 anything else. The passphrase never reaches stdout, stderr or argv: it goes
+# from bws-envs' stdout straight to gpg-preset-passphrase's stdin.
+# gpg-agent.conf must carry allow-preset-passphrase; a running agent that
+# started without it is restarted, but only while the key is locked, so a
+# cached passphrase is never thrown away.
+
+require 'open3'
+
+SECRET_PREFIX = 'services/gpg-signing/local/production/GPG_PASSPHRASE_'
+NOT_STORED = 3
+
+def sh(*cmd, stdin: '')
+  Open3.capture3(*cmd, stdin_data: stdin)
+end
+
+def say(line) = puts("gpg-preset-signing: #{line}")
+
+def fail!(line, code = 1)
+  warn "gpg-preset-signing: #{line}"
+  exit code
+end
+
+def signing_key
+  out, _err, status = sh('git', 'config', '--get', 'user.signingkey')
+  key = out.strip
+  fail!('git user.signingkey is not set (see git gpg-signingkey-local)') unless status.success? && !key.empty?
+  key
+end
+
+def unlocked?(key)
+  _out, _err, status = sh('gpg', '--batch', '--pinentry-mode', 'error', '--local-user', key, '--clearsign', stdin: "x\n")
+  status.success?
+end
+
+def keygrips(key)
+  out, err, status = sh('gpg', '--batch', '--with-colons', '--with-keygrip', '--list-secret-keys', key)
+  fail!("cannot list the secret key #{key}: #{err.lines.first&.strip}") unless status.success?
+  grips = out.lines.filter_map { |l| l.split(':')[9] if l.start_with?('grp:') }.reject(&:empty?)
+  fail!("no keygrip for #{key}") if grips.empty?
+  grips
+end
+
+def passphrase(keyid)
+  path = SECRET_PREFIX + keyid
+  out, err, status = sh('envs', 'exec', 'BWS_ACCESS_TOKEN', '--', 'bws-envs', 'secret', 'get', path)
+  return out.delete_suffix("\n") if status.success? && !out.empty?
+
+  if err.include?('Secret not found')
+    fail!("no passphrase stored for #{keyid}; store it with:\n  " \
+          "envs exec BWS_ACCESS_TOKEN -- bws-envs secret set #{path}", NOT_STORED)
+  end
+  fail!("cannot read #{path} from BWS: #{err.lines.first&.strip || 'empty value'}")
+end
+
+def preset_tool
+  dir, = sh('gpgconf', '--list-dirs', 'libexecdir')
+  File.join(dir.strip, 'gpg-preset-passphrase')
+end
+
+def preset(grips, secret)
+  grips.map do |grip|
+    out, err, status = sh(preset_tool, '--preset', grip, stdin: secret)
+    [status.success?, "#{out}#{err}"]
+  end
+end
+
+key = signing_key
+keyid = key[-16..].upcase
+
+if ARGV.include?('--check')
+  fail!("#{keyid} is locked") unless unlocked?(key)
+  say("#{keyid} is unlocked")
+  exit 0
+end
+
+if unlocked?(key)
+  say("#{keyid} is already unlocked")
+  exit 0
+end
+
+grips = keygrips(key)
+secret = passphrase(keyid)
+results = preset(grips, secret)
+if results.any? { |ok, msg| !ok && msg.include?('Not supported') }
+  # The running agent predates allow-preset-passphrase. The key is locked, so
+  # nothing cached is lost by restarting it; the socket starts a fresh one.
+  sh('gpgconf', '--kill', 'gpg-agent')
+  say('restarted gpg-agent to pick up allow-preset-passphrase')
+  results = preset(grips, secret)
+end
+failed = results.reject(&:first)
+fail!("gpg-preset-passphrase failed: #{failed.first.last.lines.first&.strip}") unless failed.empty?
+fail!("#{keyid}: passphrase preset, but signing still fails - is the stored passphrase right?") unless unlocked?(key)
+
+say("#{keyid} unlocked")

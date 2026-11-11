@@ -1,0 +1,13 @@
+[Unit]
+Description=Unlock the commit-signing GPG key with its passphrase from BWS (gpg-preset-signing)
+
+[Service]
+Type=oneshot
+# envs and bws-envs live in ~/.local/bin or behind asdf; asdf itself comes from
+# Homebrew on NewBlack, and server10 keeps tools in ~/local/bin.
+Environment=PATH=%h/.local/bin:%h/local/bin:%h/.asdf/shims:/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin
+Environment=ASDF_DATA_DIR=%h/.asdf
+ExecStart=%h/.config/git/bin/gpg-preset-signing
+# 3: no passphrase stored in BWS for this key yet - nothing to do, not a failure.
+SuccessExitStatus=3
+TimeoutStartSec=2min

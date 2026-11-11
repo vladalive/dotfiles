@@ -1,0 +1,13 @@
+#!/bin/sh
+# Enable gpg-preset-signing.timer. Runs again whenever a unit below changes:
+# service {{ include "private_dot_config/systemd/user/gpg-preset-signing.service" | sha256sum }}
+# timer   {{ include "private_dot_config/systemd/user/gpg-preset-signing.timer" | sha256sum }}
+#
+# A host without a systemd user manager (a container, a Mac) skips this
+# quietly: the script and units are still installed and can be run by hand.
+set -u
+command -v systemctl >/dev/null 2>&1 || exit 0
+XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+export XDG_RUNTIME_DIR
+systemctl --user daemon-reload 2>/dev/null || exit 0
+systemctl --user enable --now gpg-preset-signing.timer
