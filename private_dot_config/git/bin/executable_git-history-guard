@@ -28,14 +28,23 @@ module HistoryGuard
     status.success? ? out.strip : nil
   end
 
-  def check(base, head)
+  # unrecorded: the pushed branch when its base is the repository default
+  # because nobody recorded a parent. A stacked PR in that state is checked
+  # against the default base, so the commits it inherits from its parent look
+  # like its own. stale: the pushed branch whose recorded parent may be gone.
+  # Both only add a line saying what to set; neither relaxes the check.
+  def check(base, head, unrecorded: nil, stale: nil)
     raise ArgumentError, 'base is required; set branch.<destination>.agentsKitBase for a stack' if base.to_s.empty?
-    base_oid = resolve(base, 'base')
+    base_oid = resolve(base, 'base', stale)
     head_oid = resolve(head, 'head')
     merges = git('rev-list', '--merges', "#{base_oid}..#{head_oid}").lines.map(&:strip)
     unless merges.empty?
       warn "history-guard: merge commits in PR range #{base}..#{head}: #{merges.join(', ')}"
       warn 'Update the branch with rebase, then git pushfl. A refused push is not permission to merge instead.'
+      if unrecorded
+        warn "If #{unrecorded} is stacked on another PR, the merge may belong to its parent: record the parent with " \
+             "git config branch.#{unrecorded}.agentsKitBase refs/remotes/origin/<parent>, fetch it and push again."
+      end
       return false
     end
     signed?("#{base}..#{head}", ["#{base_oid}..#{head_oid}"])
@@ -78,10 +87,18 @@ module HistoryGuard
     end
   end
 
-  def resolve(ref, label)
+  # A parent whose PR merged and whose branch was deleted leaves its child's
+  # branch.<child>.agentsKitBase naming a ref that is gone. The guard still
+  # fails closed; stale names the repoint so the session need not hunt for it.
+  def resolve(ref, label, stale = nil)
     git('rev-parse', '--verify', '--end-of-options', "#{ref}^{commit}")
   rescue ArgumentError
-    raise ArgumentError, "cannot resolve #{label} #{ref}; fetch the expected base before retrying"
+    message = "cannot resolve #{label} #{ref}; fetch the expected base before retrying"
+    if stale
+      message += ". If its PR merged and the branch was deleted, point #{stale} at the new base: " \
+                 "git config branch.#{stale}.agentsKitBase refs/remotes/origin/<base>"
+    end
+    raise ArgumentError, message
   end
 
   # A branch is named after its task, never after the tool that cut it. These
@@ -134,10 +151,11 @@ module HistoryGuard
       next true unless remote.start_with?('refs/heads/')
       next true if oid.match?(/\A0+\z/)
       branch = remote.delete_prefix('refs/heads/')
-      base = config("branch.#{branch}.agentsKitBase") || default
+      recorded = config("branch.#{branch}.agentsKitBase")
+      base = recorded || default
       # If parent and child are pushed together, compare against the proposed parent.
       parent = base.to_s.sub(%r{\Arefs/remotes/[^/]+/}, '').sub(%r{\Aorigin/}, '').delete_prefix('refs/heads/')
-      check(proposed["refs/heads/#{parent}"] || base, oid)
+      check(proposed["refs/heads/#{parent}"] || base, oid, unrecorded: (branch unless recorded), stale: (branch if recorded))
     end
   end
 
