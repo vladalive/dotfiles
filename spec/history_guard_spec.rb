@@ -55,6 +55,55 @@ RSpec.describe 'git-history-guard' do
     expect(File.read(hook)).to eq(original)
   end
 
+  # agents-backlog#582: five sessions in nine days hit these refusals and had to
+  # work out the way forward each time. The guard still refuses; it names the fix.
+  describe 'stacked branches' do
+    def install_on_pushable(repo)
+      remote = create_bare_repo
+      git!(repo, 'remote', 'add', 'origin', remote)
+      _, err, status = run_script('git-history-guard', 'install', '--base', 'master', chdir: repo)
+      expect(status.success?).to be(true), err
+      remote
+    end
+
+    it 'says how to record the parent when a merge is checked against the default base' do
+      repo = history
+      remote = install_on_pushable(repo)
+      _, err, status = Open3.capture3(git_env, 'git', 'push', 'origin', 'feature', chdir: repo)
+      expect(status.success?).to be(false)
+      expect(err).to include('merge commits', 'git config branch.feature.agentsKitBase', 'is stacked on another PR')
+      expect(remote_branches(remote)).not_to include('feature')
+    end
+
+    it 'does not suggest a parent when one is already recorded' do
+      repo = history
+      install_on_pushable(repo)
+      git!(repo, 'config', 'branch.feature.agentsKitBase', 'master')
+      _, err, status = Open3.capture3(git_env, 'git', 'push', 'origin', 'feature', chdir: repo)
+      expect(status.success?).to be(false)
+      expect(err).to include('merge commits')
+      expect(err).not_to include('stacked on another PR')
+    end
+
+    it 'names the repoint when the recorded parent is gone, and still refuses' do
+      repo = history
+      remote = install_on_pushable(repo)
+      git!(repo, 'config', 'branch.feature.agentsKitBase', 'refs/remotes/origin/deleted-parent')
+      _, err, status = Open3.capture3(git_env, 'git', 'push', 'origin', 'feature', chdir: repo)
+      expect(status.success?).to be(false)
+      expect(err).to include('cannot resolve base refs/remotes/origin/deleted-parent',
+                             'git config branch.feature.agentsKitBase refs/remotes/origin/<base>')
+      expect(remote_branches(remote)).not_to include('feature')
+    end
+
+    it 'keeps the plain missing-base message for a direct check' do
+      repo = create_repo
+      _, err, status = run_script('git-history-guard', 'check', '--base', 'missing', chdir: repo)
+      expect(status.exitstatus).to eq(2)
+      expect(err).not_to include('agentsKitBase')
+    end
+  end
+
   # While GPG was broken on 2026-10-16, queue sessions committed with
   # -c commit.gpgsign=false and pushed unsigned commits to three PRs.
   describe 'commit signatures' do
