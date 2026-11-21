@@ -132,8 +132,9 @@ function my-update-ai () {
 # ------------------------------------------------------------------------------
 
 # --- Agent command wrappers ---------------------------------------------------
-# The default providers stay unchanged; `*-mm` opts a single invocation into
-# MiniMax using the key managed locally by `envs`.
+# The default providers stay unchanged; a wrapper opts a single invocation into
+# MiniMax (`*-mm`) or the Alibaba Token Plan (`claude-qw`) with keys managed
+# locally by `envs`.
 function claude {
   local _sid="$$-$RANDOM"
   CLAUDE_CODE_TASK_LIST_ID="cc-$_sid" command claude "$@"
@@ -165,6 +166,34 @@ function claude-mm {
   ANTHROPIC_AUTH_TOKEN="$_key" \
   ANTHROPIC_MODEL="$_model" \
   ANTHROPIC_SMALL_FAST_MODEL="$_model" \
+    command claude "$@"
+}
+
+# Claude Code on the Alibaba Cloud Token Plan (Personal Essential). Credits
+# per request from a monthly quota; the light model is the small/fast one.
+# Spent credits answer 429 insufficient_quota - no pay-as-you-go fallback.
+function claude-qw {
+  local _sid _key _model
+  _model="qwen4-max"
+  if [ "$1" = "-m" ]; then
+    [ -n "$2" ] || {
+      echo "claude-qw: -m requires a Token Plan model name" >&2
+      return 2
+    }
+    _model="$2"
+    shift 2
+  fi
+  _key="${ALIBABA_TOKEN_PLAN_API_KEY:-$(envs get ALIBABA_TOKEN_PLAN_API_KEY 2>/dev/null)}"
+  [ -n "$_key" ] || {
+    echo "claude-qw: ALIBABA_TOKEN_PLAN_API_KEY not found (bws-envs secret set envs/ALIBABA_TOKEN_PLAN_API_KEY)" >&2
+    return 1
+  }
+  _sid="$$-$RANDOM"
+  CLAUDE_CODE_TASK_LIST_ID="cc-$_sid" \
+  ANTHROPIC_BASE_URL="https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic" \
+  ANTHROPIC_AUTH_TOKEN="$_key" \
+  ANTHROPIC_MODEL="$_model" \
+  ANTHROPIC_SMALL_FAST_MODEL="qwen3.8-flash" \
     command claude "$@"
 }
 
