@@ -29,6 +29,9 @@ shell_files() {
       esac
     done
 
+    # The signing wrapper git runs as gpg.program.
+    printf '%s\n' dot_local/bin/executable_gpg-sign-retry
+
     # This repository's own tooling.
     for candidate in "${root}"/bin/*; do
       [ -f "${candidate}" ] && printf '%s\n' "${candidate#"${root}"/}"

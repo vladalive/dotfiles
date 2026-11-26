@@ -6,6 +6,12 @@
 [commit]
   gpgsign = true
 
+[gpg]
+  # Looked up on PATH (git does not expand ~ here): ~/.local/bin, from
+  # dot_local/bin. Unlocks the key and signs again when gpg-agent restarted and
+  # lost the passphrase; see the script header.
+  program = gpg-sign-retry
+
 [credential]
   helper = cache
 
