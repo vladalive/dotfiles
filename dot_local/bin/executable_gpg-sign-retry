@@ -1,0 +1,48 @@
+#!/bin/sh
+# gpg-sign-retry <gpg arguments>
+#
+# git's gpg.program. Runs gpg exactly as git asked, and when it fails only
+# because the signing key's passphrase is not cached - gpg-agent restarted since
+# the last gpg-preset-signing run, so there is no tty to ask on - runs
+# gpg-preset-signing and signs once more. Without this, every commit in the
+# window between an agent restart and the next timer run died with
+# `cannot open '/dev/tty'` (agents-backlog#1505).
+#
+# git hands the payload on stdin, so it is kept in a file for the second try.
+# Output of a failed first attempt is dropped; only the final attempt reaches
+# git. Any other failure - a bad key, a missing keyring - passes through as is.
+#
+# GPG_PRESET_SIGNING overrides the unlock command (default: gpg-preset-signing
+# next to this script, else ~/.config/git/bin).
+set -u
+
+tmp="$(mktemp -d)" || exit 2
+trap 'rm -rf "${tmp}"' EXIT HUP INT TERM
+cat >"${tmp}/in"
+
+sign() {
+  gpg "$@" <"${tmp}/in" >"${tmp}/out" 2>"${tmp}/err"
+}
+
+finish() {
+  cat "${tmp}/out"
+  cat "${tmp}/err" >&2
+}
+
+sign "$@"
+status=$?
+
+if [ "${status}" -ne 0 ] && grep -q -e NEED_PASSPHRASE -e "cannot open '/dev/tty'" -e 'No passphrase given' -e 'Inappropriate ioctl for device' -e 'No pinentry' "${tmp}/err"; then
+  preset="${GPG_PRESET_SIGNING:-}"
+  if [ -z "${preset}" ]; then
+    preset="$(dirname "$0")/gpg-preset-signing"
+    [ -x "${preset}" ] || preset="${HOME}/.config/git/bin/gpg-preset-signing"
+  fi
+  if [ -x "${preset}" ] && "${preset}" >&2; then
+    sign "$@"
+    status=$?
+  fi
+fi
+
+finish
+exit "${status}"
